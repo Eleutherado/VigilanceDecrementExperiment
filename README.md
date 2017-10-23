@@ -8,4 +8,4 @@ A low fi lifeguard simulation program meant to study the factors that impact vig
 + Alice Zheng
 + Emilio Vargas
 
-##### Students At CMU
+###### Students At CMU
