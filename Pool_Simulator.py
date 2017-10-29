@@ -8,6 +8,9 @@ WIDTH = 1200
 HEIGHT = 700
 POOL_BORDER_WIDTH = WIDTH/20
 POOL_BORDER_HEIGHT = HEIGHT/20
+NUM_SWIMMERS = 20
+
+# Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
 
 ####################################
 # CLASSES
@@ -24,8 +27,10 @@ class MovingDot(object):
         self.x = x
         self.y = y
         self.r = 15
-        self.speed = 2
-        self.dir = random.randint(0,7) # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
+        self.speed = random.randint(2, 5) # random speed
+        self.dir = random.randint(0,7) # random direction 
+        self.moveX = MovingDot.dirNums[self.dir][0] * self.speed
+        self.moveY = MovingDot.dirNums[self.dir][1] * self.speed
 
         #APPEARANCE
         self.bodyFill = "yellow"
@@ -82,17 +87,9 @@ class MovingDot(object):
     def onTimerFired(self, data):
         #check for pool border COLLISIONS
         # Need to check for corner collisions!!!
-        collidedRight = self.x + self.r >= WIDTH - POOL_BORDER_WIDTH
-        collidedLeft = self.x - self.r <= POOL_BORDER_WIDTH
-        collidedTop = self.y - self.r <= POOL_BORDER_HEIGHT
-        collidedBottom = self.y + self.r >= HEIGHT - POOL_BORDER_HEIGHT
+        self.checkWallCollisions()
+        self.checkSwimmerCollisions()
 
-        # DO ALL COLLISION CHECKS!!!!
-
-        if(collidedRight and not (collidedTop or collidedBottom)): # COLLIDED with right Border
-            self.dir = random.randint(5, 7)
-
-#        elif(collidedRight and collidedBottom)
         self.move()
 
 
@@ -100,9 +97,56 @@ class MovingDot(object):
 
     def move(self):
         #check for direction and modify x and y coords accordingly
-        self.x += self.speed
-        if (self.x > WIDTH):
-            self.x = 0
+        self.x += self.moveX
+        self.y += self.moveY
+
+    def updateDir(self):
+        self.moveX = MovingDot.dirNums[self.dir][0] * self.speed
+        self.moveY = MovingDot.dirNums[self.dir][1] * self.speed
+
+    def checkWallCollisions(self):
+        collidedRight = self.x + self.r >= WIDTH - POOL_BORDER_WIDTH
+        collidedLeft = self.x - self.r <= POOL_BORDER_WIDTH
+        collidedTop = self.y - self.r <= POOL_BORDER_HEIGHT
+        collidedBottom = self.y + self.r >= HEIGHT - POOL_BORDER_HEIGHT
+
+        if(not (collidedLeft or collidedRight) and collidedTop): # COLLIDED with top
+            self.dir = random.randint(3, 5)
+            self.updateDir()
+
+        elif(collidedRight and collidedTop): # COLLIDED with top right
+            self.dir = random.randint(4, 6)
+            self.updateDir()
+
+        elif(collidedRight and not (collidedTop or collidedBottom)): # COLLIDED with right 
+            self.dir = random.randint(5, 7)
+            self.updateDir()
+
+        elif(collidedRight and collidedBottom): # COLLIDED with bottom right 
+            self.dir = random.choice([6, 7, 0])
+            self.updateDir()
+
+        elif(not (collidedRight or collidedLeft) and collidedBottom): # COLLIDED with bottom 
+            self.dir = random.choice([7, 0, 1])
+            self.updateDir()
+
+        elif(collidedLeft and collidedBottom): # COLLIDED with bottom left
+            self.dir = random.randint(0, 2)
+            self.updateDir() 
+
+        elif(collidedLeft and not (collidedTop or collidedBottom)): # COLLIDED with left
+            self.dir = random.randint(1, 3)
+            self.updateDir()
+
+        elif(collidedLeft and collidedBottom): # COLLIDED with top left
+            self.dir = random.randint(2, 4)
+            self.updateDir()
+
+
+    def checkSwimmerCollisions(self):
+        pass
+
+        
 
 
 
@@ -114,7 +158,7 @@ def init(data):
     i = 0
     #cR is the circle radius
     cR = 25
-    numPatrons = 20
+    numPatrons = NUM_SWIMMERS
     while (i < numPatrons):
         xCord = random.randint(50+cR,data.width-50-cR)
         yCord = random.randint(50+cR,data.height-50-cR)
@@ -177,7 +221,7 @@ def run(width, height):
     data = Struct()
     data.width = width
     data.height = height
-    data.timerDelay = 100 # milliseconds
+    data.timerDelay = 33 # milliseconds
     init(data)
     # create the root and the canvas
     root = Tk()
