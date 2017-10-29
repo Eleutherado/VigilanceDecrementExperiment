@@ -9,21 +9,28 @@ HEIGHT = 700
 POOL_BORDER_WIDTH = WIDTH/20
 POOL_BORDER_HEIGHT = HEIGHT/20
 
-class Dot(object):
+####################################
+# CLASSES
+####################################
+
+class MovingDot(object):
     dotCount = 0
     dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
     dirNums = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
 
     def __init__(self, x, y):
-        Dot.dotCount += 1
+        MovingDot.dotCount += 1
+        #MOTION
         self.x = x
         self.y = y
         self.r = 15
+        self.speed = 2
+        self.dir = random.randint(0,7) # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
+
+        #APPEARANCE
         self.bodyFill = "yellow"
         self.featureFill = "#4f5104"
-        self.isDrowning = False
-        self.dir = random.randint(0,7) # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
-        # goes from 0 to 7
+        # goes from 0 to 7, 2 & 3 are Stable, 2-7 are Variable
         # 0 Non-Drowner floating
         # 1 Non-Drowner Submerged
         # 2 Drowner Frowner
@@ -32,9 +39,11 @@ class Dot(object):
         # 5 Inverted Drowner Frowner
         # 6 Inverted Drowner Screamer
         # 7 Inverted Drowner Line Mouth
-
-        # 2 & 3 are Stable, 2-7 are Variable
         self.expression = 0
+
+        #STATE
+        self.isDrowning = False
+        
 
     def containsPoint(self, x, y):
         d = ((self.x - x)**2 + (self.y - y)**2)**0.5
@@ -84,43 +93,22 @@ class Dot(object):
             self.dir = random.randint(5, 7)
 
 #        elif(collidedRight and collidedBottom)
+        self.move()
 
 
         #CHECK SWIMMER COLLISIONS
 
-
-class MovingDot(Dot):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.speed = 2 # default initial speed
-
-    def onTimerFired(self, data):
-        #moves to the right
+    def move(self):
         #check for direction and modify x and y coords accordingly
         self.x += self.speed
-        if (self.x > data.width):
+        if (self.x > WIDTH):
             self.x = 0
 
-class drowningDot(MovingDot):
-    def __init__(self, x, y):
-        super().__init__(x, y)
-        self.speed = 0
-        self.flashCounter = 0
-        self.showFlash = True
 
-    def onTimerFired(self, data):
-        super().onTimerFired(data)
-        self.flashCounter += 1
-        if (self.flashCounter == 5):
-            self.flashCounter = 0
-            self.showFlash = not self.showFlash
 
-    def draw(self, canvas):
-        canvas.create_rectangle(self.x-self.r, self.y-self.r,
-                               self.x+self.r, self.y+self.r,
-                               fill="lightGray")
-        super().draw(canvas)
-
+####################################
+# MAIN FUNCTIONS
+####################################
 def init(data):
     data.dots = [ ]
     i = 0
@@ -156,7 +144,7 @@ def timerFired(data):
         dot.onTimerFired(data)
 
 ####################################
-# use the run function as-is
+# RUN FUNCTION
 ####################################
 
 def run(width, height):
