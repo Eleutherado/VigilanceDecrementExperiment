@@ -4,7 +4,7 @@
 import random
 from tkinter import *
 
-WIDTH = 1000
+WIDTH = 1200
 HEIGHT = 700
 POOL_BORDER_WIDTH = WIDTH/20
 POOL_BORDER_HEIGHT = HEIGHT/20
@@ -19,16 +19,17 @@ class Dot(object):
         self.x = x
         self.y = y
         self.r = 15
-        self.fill = "yellow"
+        self.bodyFill = "yellow"
+        self.featureFill = "#4f5104"
         self.isDrowning = False
         self.dir = random.randint(0,7) # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
-        # goes from 0 to 6
+        # goes from 0 to 7
         # 0 Non-Drowner floating
         # 1 Non-Drowner Submerged
         # 2 Drowner Frowner
         # 3 Drowner Screamer
         # 4 Drowner Line Mouth
-        # 5 Inverted  Drowner Frowner
+        # 5 Inverted Drowner Frowner
         # 6 Inverted Drowner Screamer
         # 7 Inverted Drowner Line Mouth
 
@@ -45,25 +46,28 @@ class Dot(object):
         topY = self.y-self.r
         bottomY = self.y+self.r
         bodyWidth = self.r * 2
+        eyeWidthOffset = bodyWidth/5 # eyes take up a fifth of the face, and are a fifth from the edges
         #make above the eyes
         submergeY = topY + self.r/3 # y coordinte of water line when submerged
         floatY = bottomY - self.r/3 #y coordinte of water line when floating
 
         #create body
         canvas.create_oval(leftX, topY,
-                           rightX, bottomY,
-                           fill=self.fill)
-        #create left eye
-        canvas.create_oval(leftX+6, topY+6,
-                           leftX , bottomY-18,
-                           fill=self.fill)
+                            rightX, bottomY,
+                            fill=self.bodyFill)
+        #create left eye -- Eyes go
+        canvas.create_oval(leftX + eyeWidthOffset, topY + bodyWidth/4,
+                            leftX + 2 * eyeWidthOffset, topY + bodyWidth/2,
+                            fill=self.featureFill)
         #create right eye
-        canvas.create_oval(leftX+12, topY+6,
-                           rightX-10, bottomY-18,
-                           fill=self.fill)
+        canvas.create_oval(rightX - eyeWidthOffset, topY + bodyWidth/4,
+                            rightX - 2 * eyeWidthOffset, topY + bodyWidth/2,
+                            fill=self.featureFill)
         # create mouth :*
-        canvas.create_arc(leftX + 5, self.y + self.r/4, rightX - 5, self.y + 4 * self.r/6, start=180,
-                    extent=180, outline="black", fill=None, width=.5)
+        canvas.create_arc(leftX + eyeWidthOffset, self.y + self.r/4, 
+                            rightX - eyeWidthOffset, self.y + 4 * self.r/6, 
+                            start=180, extent=180, width=.5,
+                            outline="black", fill=self.featureFill)
 
 
     def onTimerFired(self, data):
@@ -132,7 +136,10 @@ def init(data):
 def mousePressed(event, data):
     for dot in reversed(data.dots):
         if (dot.containsPoint(event.x, event.y)):
-            #saved or false alarm!!
+            #if (dot.isDrowning):
+                #correct
+            #else
+                #incorrect!
             return
 
 
