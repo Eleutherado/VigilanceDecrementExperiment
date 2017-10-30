@@ -4,6 +4,8 @@
 import random
 from tkinter import *
 
+
+
 WIDTH = 1200
 HEIGHT = 700
 POOL_BORDER_WIDTH = WIDTH/20
@@ -11,9 +13,30 @@ POOL_BORDER_HEIGHT = HEIGHT/20
 NUM_SWIMMERS = 20
 
 MIN_SPEED = 1
-MAX_SPEED = 5
+MAX_SPEED = 3
+IS_VARIABLE = True
+
+
+#SIMULATION_TIME  --> number of miliseconds that the simulation has been running.
+'''
+NUM_DROWNERS = 20
+
+DROWNER_TIMES = [60000]
+
+
+drowningCount = 0
+(if timer.time() >= DROWNER_TIMES[drowningCount]):
+    drowningCount += 1
+    drowner = random.choice(dots)
+    drowner.drown(isVariable)
+'''
+
+
+
+
 
 # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
+
 
 def getNewSpeed():
     return random.randint(MIN_SPEED, MAX_SPEED)
@@ -29,6 +52,7 @@ class MovingDot(object):
     dirNums = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
     maxSpeed = 5
     minSpeed = 1
+    submergedColor = '#4b90cc'
 
     def __init__(self, x, y):
         MovingDot.dotCount += 1
@@ -46,15 +70,19 @@ class MovingDot(object):
         #APPEARANCE
         self.bodyFill = "yellow"
         self.featureFill = "#4f5104"
+
         # goes from 0 to 7, 2 & 3 are Stable, 2-7 are Variable
         # 0 Non-Drowner floating
         # 1 Non-Drowner Submerged
+
         # 2 Drowner Frowner
         # 3 Drowner Screamer
+
         # 4 Drowner Line Mouth
         # 5 Inverted Drowner Frowner
         # 6 Inverted Drowner Screamer
         # 7 Inverted Drowner Line Mouth
+
         self.expression = 0
 
         #STATE
@@ -65,6 +93,13 @@ class MovingDot(object):
         d = ((self.x - x)**2 + (self.y - y)**2)**0.5
         return (d <= self.r)
 
+    def drown(self, condition):
+        #if stable--> chose either 2 or 3
+        # else choose from 2 - 7
+        #### ENHANCEMENT: 5 seconds under water, no face change
+        # flip isDrowning to True
+        pass
+
     def draw(self, canvas): 
         leftX = self.x - self.r
         rightX = self.x + self.r
@@ -72,29 +107,136 @@ class MovingDot(object):
         bottomY = self.y + self.r
 
         bodyWidth = self.r * 2
-        eyeWidthOffset = bodyWidth/5 # eyes take up a fifth of the face, and are a fifth from the edges
 
-        #make above the eyes
-        submergeY = topY + self.r/3 # y coordinte of water line when submerged
-        floatY = bottomY - self.r/3 #y coordinte of water line when floating
+        eyeWidthOffset = bodyWidth/5 # eyes take up a fifth of the face, and are a fifth from the edges
+        isInverted = False
+        
+        # 0 Non-Drowner floating
+        # 1 Non-Drowner Submerged
+        # 2 Drowner Frowner
+        # 3 Drowner Screamer
+        # 4 Drowner Line Mouth 
+        # 5 Inverted Drowner Frowner
+        # 6 Inverted Drowner Screamer
+        # 7 Inverted Drowner Line Mouth
+
+        # Check expression, draw face based on that
 
         #create body
         canvas.create_oval(leftX,topY,
                             rightX, bottomY,
                             fill=self.bodyFill)
+
+        #### is submerged? --> Draw WaterLine Above
+
+        if (1 <= self.expression):
+            self.drawWaterline(canvas,leftX, rightX, topY, bottomY, True)
+        else:
+            self.drawWaterline(canvas, leftX, rightX, topY, bottomY, False)
+
+
+
+        #### is inverted? --> Draw eyes below and mouth Above
+        if (5 <= self.expression):
+            isInverted = True
+        self.drawEyes(canvas, leftX, rightX, topY, bottomY, isInverted)
+         
+
+        if (self.expression == 2):
+            #frown
+            self.drawMouth(canvas, leftX, rightX, topY, bottomY, isInverted, 'arcUp')
+
+        elif (self.expression == 3 or self.expression == 6):
+            #scream
+            self.drawMouth(canvas, leftX, rightX, topY, bottomY, isInverted, 'ellipse')
+    
+
+        elif (self.expression == 4 or self.expression == 7):
+            #line mouth
+            self.drawMouth(canvas, leftX, rightX, topY, bottomY, isInverted, 'line')
+        else:
+            #smile
+            self.drawMouth(canvas, leftX, rightX, topY, bottomY, isInverted, 'arcDown')
+
+
+        
+    def drawWaterline(self, canvas, leftX, rightX, topY, bottomY, isSubmerged):
+        # if submerged then draw waterline near top, else, near bottom
+        if(isSubmerged):
+            waterlineY = topY + self.r # y coordinte of water line when submerged  
+        else: waterlineY = bottomY - self.r/4 # y coordinte of water line when floating
+
+
+
+        canvas.create_rectangle(leftX, waterlineY, 
+                                rightX, bottomY, 
+                            outline=MovingDot.submergedColor, fill=MovingDot.submergedColor)
+        #redraw face outline
+        canvas.create_oval(leftX,topY,
+                            rightX, bottomY,
+                            fill="")
+
+
+
+    def drawEyes(self, canvas, leftX, rightX, topY, bottomY, isInverted):
+        # if inverted then draw eyes near bottom, else, near top
+
+        bodyWidth = self.r * 2
+        eyeWidthOffset = bodyWidth/5 # eyes take up a fifth of the face, and are a fifth from the edges
+        eyeHeight = bodyWidth/4
+
+        if(isInverted):
+            eyeY = bottomY - bodyWidth/2
+        else:
+            eyeY = topY + bodyWidth/4
+
         #create left eye 
-        canvas.create_oval(leftX + eyeWidthOffset, topY + bodyWidth/4,
-                            leftX + 2 * eyeWidthOffset, topY + bodyWidth/2,
+        canvas.create_oval(leftX + eyeWidthOffset, eyeY,
+                            leftX + 2 * eyeWidthOffset, eyeY + eyeHeight,
                             fill=self.featureFill)
         #create right eye
-        canvas.create_oval(rightX - eyeWidthOffset, topY + bodyWidth/4,
-                            rightX - 2 * eyeWidthOffset, topY + bodyWidth/2,
+        canvas.create_oval(rightX - eyeWidthOffset, eyeY,
+                            rightX - 2 * eyeWidthOffset, eyeY + eyeHeight,
                             fill=self.featureFill)
+
+    def drawMouth(self, canvas, leftX, rightX, topY, bottomY, isInverted, mouthType):
+        # if inverted then draw mouth near top, else, near bottom
+
+        # Draw shape based on mouth type
+        # frown drawInvArc (2, 5) -- scream drawEllipse(3, 6) -- line mouth drawLine (4, 7)
+
+        bodyWidth = self.r * 2
+        mouthHeight = bodyWidth/4 
+        eyeWidthOffset = bodyWidth/5 # TODO clean up repeated code: eyeWidthOffset and bodyWidth
+
+        if(isInverted):
+            mouthTopY = self.y - self.r/5 - mouthHeight
+        else:
+            mouthTopY = self.y + self.r/5
+
         # create mouth :*
-        canvas.create_arc(leftX + eyeWidthOffset, self.y + self.r/4, 
-                            rightX - eyeWidthOffset, self.y + 4 * self.r/6, 
+        if(mouthType == 'arcDown'):
+            canvas.create_arc(leftX + eyeWidthOffset, mouthTopY, 
+                            rightX - eyeWidthOffset, mouthTopY + mouthHeight, 
                             start=180, extent=180, width=.5,
-                            outline="black", fill=self.featureFill)
+                            fill=self.featureFill)
+
+        elif(mouthType == 'arcUp'):
+            canvas.create_arc(leftX + eyeWidthOffset, mouthTopY, 
+                            rightX - eyeWidthOffset, mouthTopY + mouthHeight, 
+                            start=0, extent=180, width=.5,
+                            fill=self.featureFill)
+
+        elif(mouthType == 'ellipse'):
+            canvas.create_oval(leftX + eyeWidthOffset, mouthTopY, 
+                            rightX - eyeWidthOffset, mouthTopY + mouthHeight, 
+                            fill=self.featureFill)
+
+            
+        elif(mouthType == 'line'):
+            canvas.create_line(leftX + eyeWidthOffset, mouthTopY + mouthHeight/2, 
+                                rightX - eyeWidthOffset, mouthTopY + mouthHeight/2,
+                                width=8, fill=self.featureFill)
 
 
     def onTimerFired(self, data):
@@ -109,7 +251,7 @@ class MovingDot(object):
         #check for direction and modify x and y coords accordingly
         self.x += self.moveX
         self.y += self.moveY
-        
+
 
     def updateDir(self, newDir):
         self.dir = newDir
@@ -123,42 +265,42 @@ class MovingDot(object):
         collidedTop = self.y - self.r <= POOL_BORDER_HEIGHT
         collidedBottom = self.y + self.r >= HEIGHT - POOL_BORDER_HEIGHT
 
-        if(not (collidedLeft or collidedRight) and collidedTop): # COLLIDED with top
+        if (not (collidedLeft or collidedRight) and collidedTop): # COLLIDED with top
             newDir = random.randint(3, 5)
             self.updateDir(newDir)
 
-        elif(collidedRight and collidedTop): # COLLIDED with top right
+        elif (collidedRight and collidedTop): # COLLIDED with top right
             newDir = random.randint(4, 6)
             self.updateDir(newDir)
 
-        elif(collidedRight and not (collidedTop or collidedBottom)): # COLLIDED with right 
+        elif (collidedRight and not (collidedTop or collidedBottom)): # COLLIDED with right 
             newDir = random.randint(5, 7)
             self.updateDir(newDir)
 
-        elif(collidedRight and collidedBottom): # COLLIDED with bottom right 
+        elif (collidedRight and collidedBottom): # COLLIDED with bottom right 
             newDir= random.choice([6, 7, 0])
             self.updateDir(newDir)
 
-        elif(not (collidedRight or collidedLeft) and collidedBottom): # COLLIDED with bottom 
+        elif (not (collidedRight or collidedLeft) and collidedBottom): # COLLIDED with bottom 
             newDir = random.choice([7, 0, 1])
             self.updateDir(newDir)
 
-        elif(collidedLeft and collidedBottom): # COLLIDED with bottom left
+        elif (collidedLeft and collidedBottom): # COLLIDED with bottom left
             newDir = random.randint(0, 2)
             self.updateDir(newDir) 
 
-        elif(collidedLeft and not (collidedTop or collidedBottom)): # COLLIDED with left
+        elif (collidedLeft and not (collidedTop or collidedBottom)): # COLLIDED with left
             newDir = random.randint(1, 3)
             self.updateDir(newDir)
 
-        elif(collidedLeft and collidedBottom): # COLLIDED with top left
+        elif (collidedLeft and collidedBottom): # COLLIDED with top left
             newDir = random.randint(2, 4)
             self.updateDir(newDir)
 
 
     def checkSwimmerCollisions(self, data): # TODO: MAKE SURE SWIMMER NOT COLLIDING WITH WALL TOO
         for other in data.dots:
-            if(other is self): # always colliding with self
+            if (other is self): # always colliding with self
                 break
 
             xDist = abs(self.x - other.x)
@@ -206,7 +348,6 @@ def mousePressed(event, data):
 def redrawAll(canvas, data):
     for dot in data.dots:
         dot.draw(canvas)
-    #canvas.create_text(data.width/2, 10, text="%d Dots" % Dot.dotCount)
 
 def keyPressed(event, data):
     pass
@@ -227,7 +368,7 @@ def run(width, height):
                                 fill='NavajoWhite2', width=0)
         #Draw Pool water
         canvas.create_rectangle(POOL_BORDER_WIDTH, POOL_BORDER_HEIGHT, data.width - POOL_BORDER_WIDTH, data.height - POOL_BORDER_HEIGHT,
-                                fill='DeepSkyBlue2', width=0)
+                                fill='#48a3f2', width=0)
         redrawAll(canvas, data)
         canvas.update()
 
