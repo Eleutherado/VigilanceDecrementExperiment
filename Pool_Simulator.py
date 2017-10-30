@@ -1,38 +1,36 @@
 # pool simulator
-
+# Special thanks to Mark Stehlik and David Kosbie <3 
+# for teaching Blopit how to steal their code and enhance it w engineering chops
 
 import random
+import time
 from tkinter import *
-
 
 
 WIDTH = 1200
 HEIGHT = 700
 POOL_BORDER_WIDTH = WIDTH/20
 POOL_BORDER_HEIGHT = HEIGHT/20
-NUM_SWIMMERS = 20
+NUM_SWIMMERS = 40
 
 MIN_SPEED = 1
 MAX_SPEED = 3
 IS_VARIABLE = True
 
 
-#SIMULATION_TIME  --> number of miliseconds that the simulation has been running.
-'''
+SIMULATION_TIME = time.time()  #--> number of miliseconds that the simulation has been running.
+
 NUM_DROWNERS = 20
 
-DROWNER_TIMES = [60000]
+DROWNER_TIMES = []
 
-
+'''
 drowningCount = 0
 (if timer.time() >= DROWNER_TIMES[drowningCount]):
     drowningCount += 1
     drowner = random.choice(dots)
     drowner.drown(isVariable)
 '''
-
-
-
 
 
 # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
@@ -93,12 +91,14 @@ class MovingDot(object):
         d = ((self.x - x)**2 + (self.y - y)**2)**0.5
         return (d <= self.r)
 
-    def drown(self, condition):
+    def drown(self):
         #if stable--> chose either 2 or 3
+        self.isDrowning = True
+        self.expression = random.randint(2,7)
+
         # else choose from 2 - 7
         #### ENHANCEMENT: 5 seconds under water, no face change
         # flip isDrowning to True
-        pass
 
     def draw(self, canvas): 
         leftX = self.x - self.r
@@ -236,15 +236,18 @@ class MovingDot(object):
         elif(mouthType == 'line'):
             canvas.create_line(leftX + eyeWidthOffset, mouthTopY + mouthHeight/2, 
                                 rightX - eyeWidthOffset, mouthTopY + mouthHeight/2,
-                                width=8, fill=self.featureFill)
+                                width=mouthHeight, fill=self.featureFill)
 
 
     def onTimerFired(self, data):
 
         self.checkWallCollisions()
         self.checkSwimmerCollisions(data)
+        if(self.isDrowning):
+            print("help! I'm Drowning!")
 
-        self.move()
+        if (not self.isDrowning):
+            self.move()
 
 
     def move(self):
@@ -325,6 +328,11 @@ class MovingDot(object):
 # MAIN FUNCTIONS
 ####################################
 def init(data):
+    data.drawGreenTick = False
+    data.startResponseDraw = 0
+    data.responseDisplayDelay = 1.0
+    data.greenTickColor = '#067c2d'
+    data.drawRedX = False
     data.dots = [ ]
     i = 0
     #cR is the circle radius
@@ -335,19 +343,57 @@ def init(data):
         yCord = random.randint(50+cR,data.height-50-cR)
         data.dots.append(MovingDot(xCord, yCord))
         i = i + 1
+
+def timeResponseDisplay(data, response):
+    if(response == 'tick'):
+        if(time.time() - data.startResponseDraw >= data.responseDisplayDelay and data.drawGreenTick):
+            data.drawGreenTick = False
+
+    elif(response == 'X'):
+        if(time.time() - data.startResponseDraw >= data.responseDisplayDelay and data.drawRedX):
+            data.drawRedX = False
+
+
 def mousePressed(event, data):
+    swimmerClicked = False
     for dot in reversed(data.dots):
         if (dot.containsPoint(event.x, event.y)):
-            #if (dot.isDrowning):
-                #correct
-            #else
-                #incorrect!
-            return
+            swimmerClicked = True
+            if (dot.isDrowning):
+                #log correct click
+                data.drawGreenTick = True
+                data.startResponseDraw = time.time()
+            else:
+                #log false-alarm click
+                data.drawRedX = True
+                data.startResponseDraw = time.time()
+    if(not swimmerClicked):
+        data.drawRedX = True
+        data.startResponseDraw = time.time()
+
+    #log out-of-swimmer click
+    #log whether current drowning or not.
+    return
 
 
 def redrawAll(canvas, data):
     for dot in data.dots:
         dot.draw(canvas)
+    if(data.drawGreenTick):
+        drawGreenTick(canvas, data)
+
+    if(data.drawRedX):
+        drawRedX(canvas, data)
+
+def drawGreenTick(canvas, data):
+    timeResponseDisplay(data, "tick")
+    canvas.create_text(data.width/2, data.height/2, text="safe!", font=("Arial", 120), fill=data.greenTickColor)
+
+
+def drawRedX(canvas, data):
+    timeResponseDisplay(data,"X")
+    canvas.create_text(data.width/2, data.height/2, text="X", font=("Arial", 200), fill="red")
+
 
 def keyPressed(event, data):
     pass
@@ -355,6 +401,11 @@ def keyPressed(event, data):
 def timerFired(data):
     for dot in data.dots:
         dot.onTimerFired(data)
+    if(round(time.time() - SIMULATION_TIME) % 6 >= 5):
+        print("drown!")
+        random.choice(data.dots).drown()
+
+
 
 ####################################
 # RUN FUNCTION
