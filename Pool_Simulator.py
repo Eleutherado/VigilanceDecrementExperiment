@@ -15,14 +15,16 @@ NUM_SWIMMERS = 40
 
 MIN_SPEED = 1
 MAX_SPEED = 3
-IS_VARIABLE = True
 
+IS_VARIABLE_CONDITION = True
 
 SIMULATION_TIME = time.time()  #--> number of miliseconds that the simulation has been running.
 
-NUM_DROWNERS = 20
+NUM_DROWNERS = 4
 
-DROWNER_TIMES = []
+DROWNER_TIMES = [5, 10, 15, 20] # in seconds
+
+assert(NUM_DROWNERS == DROWNER_TIMES)
 
 '''
 drowningCount = 0
@@ -48,8 +50,6 @@ class MovingDot(object):
     dotCount = 0
     dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
     dirNums = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
-    maxSpeed = 5
-    minSpeed = 1
     submergedColor = '#4b90cc'
 
     def __init__(self, x, y):
@@ -85,6 +85,7 @@ class MovingDot(object):
 
         #STATE
         self.isDrowning = False
+        self.isColliding = False
         
 
     def containsPoint(self, x, y):
@@ -99,6 +100,10 @@ class MovingDot(object):
         # else choose from 2 - 7
         #### ENHANCEMENT: 5 seconds under water, no face change
         # flip isDrowning to True
+
+    def unDrown(self):
+        self.isDrowning = False
+        self.expression = 0
 
     def draw(self, canvas): 
         leftX = self.x - self.r
@@ -237,14 +242,12 @@ class MovingDot(object):
             canvas.create_line(leftX + eyeWidthOffset, mouthTopY + mouthHeight/2, 
                                 rightX - eyeWidthOffset, mouthTopY + mouthHeight/2,
                                 width=mouthHeight, fill=self.featureFill)
-
+ 
 
     def onTimerFired(self, data):
 
         self.checkWallCollisions()
         self.checkSwimmerCollisions(data)
-        if(self.isDrowning):
-            print("help! I'm Drowning!")
 
         if (not self.isDrowning):
             self.move()
@@ -311,6 +314,7 @@ class MovingDot(object):
             collided = (xDist**2 + yDist**2)**0.5 < (self.r * 2) #Pythagoras, checks that radii are touching, add 2 for legroom
 
             if (collided): #collided N
+                self.isColliding = True
                 oppositeDirSelf = (self.dir + 4) % 8 
                 self.updateDir(oppositeDirSelf)
                 self.speed = getNewSpeed()
@@ -318,6 +322,10 @@ class MovingDot(object):
                 oppositeDirOther = (other.dir + 4) % 8
                 other.updateDir(oppositeDirOther)   
                 other.speed = getNewSpeed()
+                other.isColliding = True
+            else:
+                self.isColliding = False
+
 
 
         
@@ -328,11 +336,13 @@ class MovingDot(object):
 # MAIN FUNCTIONS
 ####################################
 def init(data):
-    data.drawGreenTick = False
+    data.drawGreenTick = False 
+    data.drownerNum = 0
     data.startResponseDraw = 0
-    data.responseDisplayDelay = 1.0
+    data.responseDisplayDelay = 0.5
     data.greenTickColor = '#067c2d'
     data.drawRedX = False
+
     data.dots = [ ]
     i = 0
     #cR is the circle radius
@@ -363,6 +373,7 @@ def mousePressed(event, data):
                 #log correct click
                 data.drawGreenTick = True
                 data.startResponseDraw = time.time()
+                dot.unDrown()
             else:
                 #log false-alarm click
                 data.drawRedX = True
@@ -399,11 +410,18 @@ def keyPressed(event, data):
     pass
 
 def timerFired(data):
+    #occasionally have some dots submerge. 
     for dot in data.dots:
         dot.onTimerFired(data)
-    if(round(time.time() - SIMULATION_TIME) % 6 >= 5):
-        print("drown!")
-        random.choice(data.dots).drown()
+
+    haveDrownersLeft = data.drownerNum < len(DROWNER_TIMES)
+    if(haveDrownersLeft and time.time() - SIMULATION_TIME >= DROWNER_TIMES[data.drownerNum]):
+        #filter dots in a collision -- no colliders or already drowners
+        canDrown = list(filter(lambda x: not (x.isDrowning or x.isColliding), data.dots))
+        if(len(canDrown) > 0):
+            print("drowned", data.drownerNum)
+            random.choice(canDrown).drown()
+            data.drownerNum += 1 # make sure it doesnt go beyond list len
 
 
 
