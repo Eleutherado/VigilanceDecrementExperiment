@@ -20,12 +20,19 @@ IS_VARIABLE_CONDITION = True
 
 
 SIMULATION_START = time.time()  #--> number of miliseconds that the simulation has been running.
+SIMULATION_END = 300
+PRINTED_CORRECT = False
 
-NUM_DROWNERS = 4
+EXPERIMENT_OVER = False
 
-DROWNER_TIMES = [5, 10, 15, 20] # in seconds
+NUM_DROWNERS = 5
+
+DROWNER_TIMES = [30, 60, 100, 250, 270] # in seconds
+DROWNER_TIMES.sort()
+
 
 assert(NUM_DROWNERS == len(DROWNER_TIMES))
+
 
 '''
 drowningCount = 0
@@ -44,6 +51,7 @@ def getNewSpeed():
 
 def timeIntoExperiment():
     return time.time() - SIMULATION_START
+
 ####################################
 # CLASSES
 ####################################
@@ -361,7 +369,8 @@ def init(data):
 
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
-    # [(time, isCorrect, onSwimmer, isDuringDrowning)...]
+
+    # [(time, isCorrect, onSwimmer, isDuringDrowning, clickDelay, swimmer.expression)...]
     data.clickLog = [] # in seconds 
 
     data.dots = [ ]
@@ -411,18 +420,23 @@ def mousePressed(event, data):
 
 def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     #sanity Checks
+    clickDelay = None
+    logExpression = None
     assert(onSwimmer == bool(swimmer))
     if(swimmer != None):
         assert(isinstance(swimmer,MovingDot)) 
-     
-
-    data.clickLog.append((time, isCorrect, onSwimmer, data.isDuringDrowning))
-    print("click: ", data.clickLog[data.clickNum])
-    data.clickNum += 1
 
     if (isCorrect and swimmer != None): 
         clickDelay = time - swimmer.timeStartedDrowning 
-        data.correctClickDelays.append((time, clickDelay, swimmer.expression))
+        logExpression = swimmer.expression
+        data.correctClickDelays.append((time, clickDelay, logExpression))
+
+    #(time, isCorrect, onSwimmer, isDuringDrowning, clickDelay, swimmer.expression)
+    data.clickLog.append((time, isCorrect, onSwimmer, data.isDuringDrowning, 
+                                        clickDelay, logExpression))
+    print("click: ", data.clickLog[data.clickNum])
+    data.clickNum += 1
+    print("Clicks so far = ", data.clickNum)
 
 def redrawAll(canvas, data):
     for dot in data.dots:
@@ -451,6 +465,15 @@ def timerFired(data):
     for dot in data.dots:
         dot.onTimerFired(data)
     checkToDrown(data)
+    if(SIMULATION_END <= timeIntoExperiment()):
+        printFinalData(data)
+        
+
+def printFinalData(data):
+    print("Total Click Nums= ", data.clickNum)
+    print("All Click info : \n", data.clickLog)
+    print("All Correct clicks: \n", data.correctClickDelays)
+
 
 def checkToDrown(data):
     haveDrownersLeft = data.drownerNum < len(DROWNER_TIMES)
@@ -461,8 +484,10 @@ def checkToDrown(data):
             print("drowned", data.drownerNum)
             random.choice(canDrown).drown(data)
             data.drownerNum += 1 # make sure it doesnt go beyond list len
-    if(not haveDrownersLeft):
+    if(not (haveDrownersLeft or PRINTED_CORRECT)):
         print("correct clicks: ", data.correctClickDelays)
+        PRINTED_CORRECT = True
+
 
 
 
