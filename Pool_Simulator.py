@@ -19,15 +19,17 @@ MAX_SPEED = 3
 IS_VARIABLE_CONDITION = True
 
 
-SIMULATION_START = time.time()  #--> number of miliseconds that the simulation has been running.
+SIMULATION_START = time.time()  # --> number of miliseconds that the simulation has been running.
 SIMULATION_END = 300
-PRINTED_CORRECT = False
 
-EXPERIMENT_OVER = False
+
+
 
 NUM_DROWNERS = 5
 
-DROWNER_TIMES = [30, 60, 100, 250, 270] # in seconds
+#[30, 60, 100, 250, 270] # in seconds
+
+DROWNER_TIMES = [30, 60, 100, 230, 250] # in seconds
 DROWNER_TIMES.sort()
 
 
@@ -71,7 +73,7 @@ class MovingDot(object):
         self.r = 10
 
         #MOTION
-        self.speed =  getNewSpeed()
+        self.speed = getNewSpeed()
         self.dir = random.randint(0,7) # random direction 
         self.moveX = MovingDot.dirNums[self.dir][0] * self.speed
         self.moveY = MovingDot.dirNums[self.dir][1] * self.speed
@@ -98,6 +100,7 @@ class MovingDot(object):
         self.isDrowning = False
         self.isColliding = False
         self.timeStartedDrowning = None
+        self.timeStartedSubmerge = None
         
 
     def containsPoint(self, x, y):
@@ -125,6 +128,14 @@ class MovingDot(object):
 
         self.expression = 0
         self.timeStartedDrowning = None
+
+    def submerge(self):
+        self.expression = 1
+        self.timeStartedSubmerge = timeIntoExperiment()
+
+    def unSubmerge(self):
+        self.expression = 0
+        self.timeStartedSubmerge = None
 
 
     def draw(self, canvas): 
@@ -366,6 +377,7 @@ def init(data):
     data.drawRedX = False
     data.isDuringDrowning = False
     data.clickNum = 0
+    data.isOver = False
 
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
@@ -395,24 +407,25 @@ def timeResponseDisplay(data, response):
 
 
 def mousePressed(event, data):
-    swimmerClicked = False
-    for dot in reversed(data.dots):
-        if (dot.containsPoint(event.x, event.y)):
-            swimmerClicked = True
-            if (dot.isDrowning):
-                logClick(data, timeIntoExperiment(), True, swimmerClicked, dot) # correct
-                data.drawGreenTick = True
-                data.startResponseDraw = time.time()
-                dot.unDrown(data)
+    if(not data.isOver):
+        swimmerClicked = False
+        for dot in reversed(data.dots):
+            if (dot.containsPoint(event.x, event.y)):
+                swimmerClicked = True
+                if (dot.isDrowning):
+                    logClick(data, timeIntoExperiment(), True, swimmerClicked, dot) # correct
+                    data.drawGreenTick = True
+                    data.startResponseDraw = time.time()
+                    dot.unDrown(data)
 
-            else:
-                logClick(data, timeIntoExperiment(), False, swimmerClicked, dot) # incorrect onswimmer
-                data.drawRedX = True
-                data.startResponseDraw = time.time()
-    if(not swimmerClicked):
-        logClick(data, timeIntoExperiment(), False, swimmerClicked, None) # incorrect offswimmer
-        data.drawRedX = True
-        data.startResponseDraw = time.time()
+                else:
+                    logClick(data, timeIntoExperiment(), False, swimmerClicked, dot) # incorrect onswimmer
+                    data.drawRedX = True
+                    data.startResponseDraw = time.time()
+        if(not swimmerClicked):
+            logClick(data, timeIntoExperiment(), False, swimmerClicked, None) # incorrect offswimmer
+            data.drawRedX = True
+            data.startResponseDraw = time.time()
 
     #log out-of-swimmer click
     #log whether current drowning or not.
@@ -447,6 +460,11 @@ def redrawAll(canvas, data):
     if(data.drawRedX):
         drawRedX(canvas, data)
 
+    if(data.isOver):
+
+        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
+
+
 def drawGreenTick(canvas, data):
     timeResponseDisplay(data, "tick")
     canvas.create_text(data.width/2, data.height/2, text="safe!", font=("Arial", 120), fill=data.greenTickColor)
@@ -461,19 +479,26 @@ def keyPressed(event, data):
     pass
 
 def timerFired(data):
-    #occasionally have some dots submerge. 
-    for dot in data.dots:
-        dot.onTimerFired(data)
-    checkToDrown(data)
-    if(SIMULATION_END <= timeIntoExperiment()):
-        printFinalData(data)
-        
+    #occasionally have some dots submerge.
+    if(not data.isOver): 
+        for dot in data.dots:
+            dot.onTimerFired(data)
+            if(dot.expression == 1 and timeIntoExperiment() - dot.timeStartedSubmerge >= 5):
+                dot.unSubmerge()
 
-def printFinalData(data):
-    print("Total Click Nums= ", data.clickNum)
-    print("All Click info : \n", data.clickLog)
-    print("All Correct clicks: \n", data.correctClickDelays)
 
+        checkToDrown(data)
+        checkToSubmerge(data)
+
+        if(SIMULATION_END <= timeIntoExperiment()):
+            data.isOver = True
+            printFinalData(data)
+
+def checkToSubmerge(data):
+    roll = random.randint(1, 360) # this is called 3 times per second, so we expect a drowner every 60 seconds on avg
+    if(roll == 5):
+        canSubmerge = list(filter(lambda x: not (x.isDrowning or x.isColliding), data.dots))
+        random.choice(canSubmerge).submerge()
 
 def checkToDrown(data):
     haveDrownersLeft = data.drownerNum < len(DROWNER_TIMES)
@@ -484,9 +509,12 @@ def checkToDrown(data):
             print("drowned", data.drownerNum)
             random.choice(canDrown).drown(data)
             data.drownerNum += 1 # make sure it doesnt go beyond list len
-    if(not (haveDrownersLeft or PRINTED_CORRECT)):
-        print("correct clicks: ", data.correctClickDelays)
-        PRINTED_CORRECT = True
+
+
+def printFinalData(data):
+    print("Total Click Nums= ", data.clickNum)
+    print("All Click info : \n", data.clickLog)
+    print("All Correct clicks: \n", data.correctClickDelays)
 
 
 
