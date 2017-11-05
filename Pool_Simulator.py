@@ -382,7 +382,7 @@ def init(data):
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
 
-    # [(time, isCorrect, onSwimmer, isDuringDrowning, clickDelay, swimmer.expression)...]
+    # [(time, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)...]
     data.clickLog = [] # in seconds 
 
     data.dots = [ ]
@@ -433,19 +433,20 @@ def mousePressed(event, data):
 
 def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     #sanity Checks
-    clickDelay = None
-    logExpression = None
     assert(onSwimmer == bool(swimmer))
     if(swimmer != None):
         assert(isinstance(swimmer,MovingDot)) 
+
+    clickDelay = None
+    logExpression = None
+    onDiver = (onSwimmer and not isCorrect and swimmer.expression == 1)
 
     if (isCorrect and swimmer != None): 
         clickDelay = time - swimmer.timeStartedDrowning 
         logExpression = swimmer.expression
         data.correctClickDelays.append((time, clickDelay, logExpression))
-
-    #(time, isCorrect, onSwimmer, isDuringDrowning, clickDelay, swimmer.expression)
-    data.clickLog.append((time, isCorrect, onSwimmer, data.isDuringDrowning, 
+    #(time, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)
+    data.clickLog.append((time, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
                                         clickDelay, logExpression))
     print("click: ", data.clickLog[data.clickNum])
     data.clickNum += 1
