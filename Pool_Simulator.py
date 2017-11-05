@@ -20,7 +20,12 @@ IS_VARIABLE_CONDITION = True
 
 
 SIMULATION_START = time.time()  # --> number of miliseconds that the simulation has been running.
-SIMULATION_END = 300
+SIMULATION_END = 300 # should be 1260, 21 minutes. 3 init measure, 15 condition, 3 end measure.
+
+
+INITIAL_MEASURE_END = 180 # should be 180 - 3 Minutes
+END_MEASURE_START = 1080 # should be 1080 - 18 Minutes 
+
 
 
 
@@ -382,7 +387,9 @@ def init(data):
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
 
-    # [(time, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)...]
+    # [(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)...]
+    # timePeriod = 'Initial', 'Condition', 'End'
+
     data.clickLog = [] # in seconds 
 
     data.dots = [ ]
@@ -436,6 +443,12 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     assert(onSwimmer == bool(swimmer))
     if(swimmer != None):
         assert(isinstance(swimmer,MovingDot)) 
+    if(timeIntoExperiment() <= INITIAL_MEASURE_END):
+        timePeriod = 'Initial'
+    elif(timeIntoExperiment() >= END_MEASURE_START):
+        timePeriod = 'End'
+    else:
+        timePeriod = 'Condition'
 
     clickDelay = None
     logExpression = None
@@ -445,9 +458,10 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
         clickDelay = time - swimmer.timeStartedDrowning 
         logExpression = swimmer.expression
         data.correctClickDelays.append((time, clickDelay, logExpression))
-    #(time, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)
-    data.clickLog.append((time, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
-                                        clickDelay, logExpression))
+
+    #(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)
+    data.clickLog.append((time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
+                                                    clickDelay, logExpression))
     print("click: ", data.clickLog[data.clickNum])
     data.clickNum += 1
     print("Clicks so far = ", data.clickNum)
@@ -496,7 +510,7 @@ def timerFired(data):
             printFinalData(data)
 
 def checkToSubmerge(data):
-    roll = random.randint(1, 360) # this is called 3 times per second, so we expect a drowner every 60 seconds on avg
+    roll = random.randint(1, 300) # this is called 3 times per second, so we expect a drowner every 100 seconds on avg
     if(roll == 5):
         canSubmerge = list(filter(lambda x: not (x.isDrowning or x.isColliding), data.dots))
         random.choice(canSubmerge).submerge()
