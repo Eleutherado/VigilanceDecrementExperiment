@@ -20,23 +20,11 @@ MAX_SPEED = 3
 IS_VARIABLE_CONDITION = True
 
 
-SIMULATION_START = time.time()  # --> number of miliseconds that the simulation has been running.
-SIMULATION_END = 25 # should be 1260, 21 minutes. 3 init measure, 15 condition, 3 end measure.
-
-
-INITIAL_MEASURE_END = 180 # should be 180 - 3 Minutes
-END_MEASURE_START = 1080 # should be 1080 - 18 Minutes 
-
 PARTICIPANT_ID = 0
-DATA_OUT_TO = ("VigilanceDecrement_%d.csv" % PARTICIPANT_ID)
+DATA_OUT_TO = ("VigilanceDecrementExperiment_%d.csv" % PARTICIPANT_ID)
+TRAINING_DATA_OUT_TO = ("VigilanceDecrementTraining_%d.csv" % PARTICIPANT_ID)
 
 
-#[30, 60, 100, 250, 270] # in seconds
-
-DROWNER_TIMES = [5, 10, 20] # in seconds
-DROWNER_TIMES.sort()
-
-NUM_DROWNERS = len(DROWNER_TIMES)
 
 
 # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
@@ -45,8 +33,11 @@ NUM_DROWNERS = len(DROWNER_TIMES)
 def getNewSpeed():
     return random.randint(MIN_SPEED, MAX_SPEED)
 
-def timeIntoExperiment():
-    return time.time() - SIMULATION_START
+def timeIntoSimulation(data):
+    if(data.mode == data.modes[3]): # in experiment
+        return time.time() - data.experimentStart
+    elif(data.mode == data.modes[1]): # in simulation
+        return time.time() - data.trainingStart
 
 ####################################
 # MOVING DOT CLASS
@@ -91,6 +82,7 @@ class MovingDot(object):
         self.expression = 0
 
         #STATE
+        self.willDrown = False
         self.isDrowning = False
         self.isColliding = False
         self.timeStartedDrowning = None
@@ -110,11 +102,15 @@ class MovingDot(object):
             self.expression = random.randint(2,7)
         else:
             self.expression = random.randint(2,3)
-        self.timeStartedDrowning = timeIntoExperiment()
+        self.timeStartedDrowning = timeIntoSimulation(data)
 
         # else choose from 2 - 7
         #### ENHANCEMENT: 5 seconds under water, no face change
         # flip isDrowning to True
+
+    def startDrown(self, data):
+        # expression turns to 1
+        self.willDrown = True
 
     def unDrown(self, data):
         self.isDrowning = False
@@ -123,9 +119,9 @@ class MovingDot(object):
         self.expression = 0
         self.timeStartedDrowning = None
 
-    def submerge(self):
+    def submerge(self, data):
         self.expression = 1
-        self.timeStartedSubmerge = timeIntoExperiment()
+        self.timeStartedSubmerge = timeIntoSimulation(data)
 
     def unSubmerge(self):
         self.expression = 0
@@ -332,7 +328,8 @@ class MovingDot(object):
 
 
     def checkSwimmerCollisions(self, data): # TODO: MAKE SURE SWIMMER NOT COLLIDING WITH WALL TOO
-        for other in data.dots:
+        dotList = data.experimentDots if (data.mode == data.modes[3]) else data.trainingDots
+        for other in dotList:
             if (other is self): # always colliding with self
                 break
 
@@ -356,9 +353,6 @@ class MovingDot(object):
 
 
         
-
-
-
 ########################################################################
 #                           MAIN FUNCTIONS                             #
 ########################################################################
@@ -366,26 +360,31 @@ class MovingDot(object):
             #########################################
 
 def init(data):
+    data.modes = ['splashScreen', 'training', 'postTraining', 'experiment']
+    data.timePeriods = ['Training', 'Initial', 'Condition', 'End']
+    data.mode = data.modes[0]
+    data.contrastColor = "NavajoWhite2"
+    data.waterColor = '#48a3f2'
+    
+
+    splashScreenInit(data)
+
     data.drawGreenTick = False 
-    data.drownerNum = 0
     data.startResponseDraw = 0
     data.responseDisplayDelay = 0.5
     data.greenTickColor = '#067c2d'
     data.drawRedX = False
     data.isDuringDrowning = False
-    data.clickNum = 0
-    data.isOver = False
-    data.submergeTime = 4
+    data.submergeTime = 5
 
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
 
     #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
-    # timePeriod = 'Initial', 'Condition', 'End'
-
     data.clickLog = [] # in seconds 
 
-    data.dots = [ ]
+
+def initPopulate(data, dotList):
     i = 0
     #cR is the circle radius
     offset = 25
@@ -393,8 +392,272 @@ def init(data):
     while (i < numPatrons):
         xCord = random.randint(50+offset,data.width-50-offset)
         yCord = random.randint(50+offset,data.height-50-offset)
-        data.dots.append(MovingDot(xCord, yCord))
+        dotList.append(MovingDot(xCord, yCord))
         i = i + 1
+
+
+######################################
+# DELEGATOR HANDLERS
+######################################
+
+def mousePressed(event, data):
+    if (data.mode == 'training'): trainingMousePressed(event, data)
+    elif (data.mode == 'experiment'): experimentMousePressed(event, data)
+    
+
+def keyPressed(event, data): pass
+
+def spacePressed(event, data):
+    if(data.mode == 'splashScreen'): splashScreenSpacePressed(event, data)
+    elif(data.mode == 'postTraining'): postTrainingSpacePressed(event, data)
+
+def redrawAll(canvas, data):
+    if (data.mode == 'splashScreen'): splashScreenRedrawAll(canvas, data)
+    elif (data.mode == 'training'): trainingRedrawAll(canvas, data)
+    elif (data.mode == 'postTraining'): postTrainingRedrawAll(canvas, data)
+    elif (data.mode == 'experiment'): experimentRedrawAll(canvas, data)
+    
+
+def timerFired(data):
+    if (data.mode == 'training'): trainingTimerFired(data)
+    elif (data.mode == 'experiment'): experimentTimerFired(data)
+
+def switchMode(newMode, data):
+    # ['splashScreen', 'training', 'postTraining', 'experiment']
+    if(newMode == data.modes[1]):
+        trainingInit(data)
+    elif(newMode == data.modes[3]):
+        experimentInit(data)
+    data.mode = newMode
+
+
+######################################
+# SPLASH SCREEN HANDLERS
+######################################
+
+def splashScreenInit(data):
+    data.splashSpaceBarPressed = False
+
+def splashScreenSpacePressed(event, data):
+    if(data.splashSpaceBarPressed):
+        switchMode(data.modes[1], data)
+    else:
+        data.splashSpaceBarPressed = True
+
+def splashScreenRedrawAll(canvas, data):
+    #canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
+    offset = data.height/10
+    if (not data.splashSpaceBarPressed):
+        canvas.create_text(data.width/2, data.height/4, text="Welcome to Team Blopit's Experiment!", font=("Arial", 56), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4 + offset, text="We are grateful for your time", font=("Arial", 36), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4 + 4*offset, text="Please Read the Instructions sheet", font=("Arial", 48), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4 + 5*offset, text="Ask us if you have any questions", font=("Arial", 36), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4 + 5.5*offset, text="Press the SpaceBar to proceed to training", font=("Arial", 24), fill=data.contrastColor)
+    else:
+        canvas.create_text(data.width/2, data.height/2, text="Last chance! Make sure you understand the instructions", font=("Arial", 36), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4 + 5.5*offset, text="Press the SpaceBar to Actually proceed to training", font=("Arial", 36), fill=data.contrastColor)
+
+
+
+######################################
+# TRAINING HANDLERS
+######################################
+
+
+# TODO same as experiment handlers, but not logging the data to the experiment file
+# use training timer here. 
+
+def trainingInit(data):
+    # populate pool
+    # start timers
+
+    data.trainingStarted = True
+    data.trainingOver = False
+    data.trainingStart = time.time()
+    data.trainingEnd = 45 # 45
+
+    #[30, 60, 100, 250, 270] # in seconds
+    # [5, 10, 15, 20] # for testing
+
+    data.trainingDrownerTimes = [5, 15, 20, 35] #for testing
+    data.trainingDrownerTimes.sort()
+
+    data.trainingDrownerNum = 0
+    data.trainingClickNum = 0
+
+    data.trainingDots = []
+    initPopulate(data, data.trainingDots)
+
+def trainingMousePressed(event, data):
+    if(not data.trainingOver):
+        swimmerClicked = False
+        for dot in reversed(data.trainingDots):
+            if (dot.containsPoint(event.x, event.y)):
+                swimmerClicked = True
+                if (dot.isDrowning):
+                    #TODO 
+                    #logClick(data, timeIntoSimulation(data), True, swimmerClicked, dot) # correct
+                    data.drawGreenTick = True
+                    data.startResponseDraw = time.time()
+                    dot.unDrown(data)
+
+                else:
+                    #logClick(data, timeIntoSimulation(data), False, swimmerClicked, dot) # incorrect onswimmer
+                    data.drawRedX = True
+                    data.startResponseDraw = time.time()
+        if(not swimmerClicked):
+            #logClick(data, timeIntoSimulation(data), False, swimmerClicked, None) # offswimmer
+            data.drawRedX = True
+            data.startResponseDraw = time.time()
+
+def trainingRedrawAll(canvas, data):
+    for dot in data.trainingDots:
+        dot.draw(canvas)
+    if(data.drawGreenTick):
+        drawGreenTick(canvas, data)
+
+    if(data.drawRedX):
+        drawRedX(canvas, data)
+
+    if(data.trainingOver):
+        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
+
+def trainingTimerFired(data):
+    if(not data.trainingOver): 
+        for dot in data.trainingDots:
+            dot.onTimerFired(data)
+            if(dot.expression == 1 and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
+                dot.unSubmerge()
+
+
+        checkToDrown(data)
+        checkToSubmerge(data)
+
+        if(data.trainingEnd <= timeIntoSimulation(data)):
+            data.trainingOver = True
+            # TODO CHANGE DATA OUTPUT AND LOGGING TO TRAINING ONLY
+            # printFinalData(data)
+            # writeToCSV(data.clickLog)
+    else:
+        switchMode(data.modes[2], data)
+
+
+
+######################################
+# POSTTRAINING HANDLERS
+######################################
+
+
+# TODO same as experiment handlers, but not logging the data to the experiment file
+# use training timer here. 
+
+def postTrainingSpacePressed(event, data):
+    switchMode(data.modes[3], data)
+
+def postTrainingRedrawAll(canvas, data):
+    offset = data.height/10
+    canvas.create_text(data.width/2, data.height/2, text="Your training session is done!", font=("Arial", 48), fill=data.contrastColor)
+    canvas.create_text(data.width/2, data.height/4 + 5.5*offset, text="Press the SpaceBar to Begin Experiment", font=("Arial", 36), fill=data.contrastColor)
+
+
+######################################
+# EXPERIMENT HANDLERS
+######################################
+# TODO start the experiment timer here
+
+def experimentInit(data):
+    # start timers
+    data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
+    data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
+    data.experimentStart = time.time()
+    data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+
+    setUpExperimentTimers(data)
+
+    data.experimentStarted = True
+    data.isOver = False
+
+    data.experimentDrownerNum = 0
+    data.experimentClickNum = 0
+
+    data.experimentDots = []
+    initPopulate(data, data.experimentDots)
+
+
+def setUpExperimentTimers(data):
+
+    conditionDrownerTimes = [5, 10, 15, 20] #TODO SET THAT BABY
+    initialMeasureDrownerTimes = [35, 60, 100]
+    endMeasureDrownerTimes = [15, 60, 140]
+
+    initialMeasureDrownerTimes.sort()
+    conditionDrownerTimes.sort()
+    endMeasureDrownerTimes.sort()
+    assert(conditionDrownerTimes[-1] < data.endMeasureStart - data.initialMeasureEnd)
+    assert(initialMeasureDrownerTimes[-1] < data.initialMeasureEnd)
+
+    data.experimentDrownerTimes = initialMeasureDrownerTimes + list(map(lambda x: x + data.initialMeasureEnd, conditionDrownerTimes)) + list(map(lambda x: x + data.endMeasureStart, endMeasureDrownerTimes))
+
+
+def experimentMousePressed(event, data):
+    if(not data.isOver):
+        swimmerClicked = False
+        for dot in reversed(data.experimentDots):
+            if (dot.containsPoint(event.x, event.y)):
+                swimmerClicked = True
+                if (dot.isDrowning):
+                    logClick(data, timeIntoSimulation(data), True, swimmerClicked, dot) # correct
+                    data.drawGreenTick = True
+                    data.startResponseDraw = time.time()
+                    dot.unDrown(data)
+
+                else:
+                    logClick(data, timeIntoSimulation(data), False, swimmerClicked, dot) # incorrect onswimmer
+                    data.drawRedX = True
+                    data.startResponseDraw = time.time()
+        if(not swimmerClicked):
+            logClick(data, timeIntoSimulation(data), False, swimmerClicked, None) # offswimmer
+            data.drawRedX = True
+            data.startResponseDraw = time.time()
+
+def experimentRedrawAll(canvas, data):
+    for dot in data.experimentDots:
+        dot.draw(canvas)
+    if(data.drawGreenTick):
+        drawGreenTick(canvas, data)
+
+    if(data.drawRedX):
+        drawRedX(canvas, data)
+
+    if(data.isOver):
+        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
+
+def experimentTimerFired(data):
+    #occasionally have some dots submerge.
+    if(not data.isOver): 
+        for dot in data.experimentDots:
+            dot.onTimerFired(data)
+            if(dot.expression == 1 and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
+                dot.unSubmerge()
+
+        checkToDrown(data)
+        checkToSubmerge(data)
+
+        if(data.experimentEnd <= timeIntoSimulation(data)):
+            data.isOver = True
+            printFinalData(data)
+            writeToCSV(data.clickLog)
+
+def keyPressed(event, data): pass
+
+
+def drawGreenTick(canvas, data):
+    timeResponseDisplay(data, "tick")
+    canvas.create_text(data.width/2, data.height/2, text="safe!", font=("Arial", 120), fill=data.greenTickColor)
+
+def drawRedX(canvas, data):
+    timeResponseDisplay(data,"X")
+    canvas.create_text(data.width/2, data.height/2, text="X", font=("Arial", 200), fill="red")
 
 def timeResponseDisplay(data, response):
     if(response == 'tick'):
@@ -406,42 +669,18 @@ def timeResponseDisplay(data, response):
             data.drawRedX = False
 
 
-def mousePressed(event, data):
-    if(not data.isOver):
-        swimmerClicked = False
-        for dot in reversed(data.dots):
-            if (dot.containsPoint(event.x, event.y)):
-                swimmerClicked = True
-                if (dot.isDrowning):
-                    logClick(data, timeIntoExperiment(), True, swimmerClicked, dot) # correct
-                    data.drawGreenTick = True
-                    data.startResponseDraw = time.time()
-                    dot.unDrown(data)
-
-                else:
-                    logClick(data, timeIntoExperiment(), False, swimmerClicked, dot) # incorrect onswimmer
-                    data.drawRedX = True
-                    data.startResponseDraw = time.time()
-        if(not swimmerClicked):
-            logClick(data, timeIntoExperiment(), False, swimmerClicked, None) # incorrect offswimmer
-            data.drawRedX = True
-            data.startResponseDraw = time.time()
-
-    #log out-of-swimmer click
-    #log whether current drowning or not.
-    return
 
 def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     #sanity Checks
     assert(onSwimmer == bool(swimmer))
     if(swimmer != None):
         assert(isinstance(swimmer,MovingDot)) 
-    if(timeIntoExperiment() <= INITIAL_MEASURE_END):
-        timePeriod = 'Initial'
-    elif(timeIntoExperiment() >= END_MEASURE_START):
-        timePeriod = 'End'
+    if(timeIntoSimulation(data) <= data.initialMeasureEnd):
+        timePeriod = data.timePeriods[1]
+    elif(timeIntoSimulation(data) >= data.endMeasureStart):
+        timePeriod = data.timePeriods[3]
     else:
-        timePeriod = 'Condition'
+        timePeriod = data.timePeriods[2]
 
     clickDelay = None
     logExpression = None
@@ -459,75 +698,42 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
             data.correctClickDelays.append((time, clickDelay, logExpression))
 
     #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
-    data.clickLog.append((data.clickNum, time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
+    data.clickLog.append((data.experimentClickNum, time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
                                                     clickDelay, logExpression, xLoc, yLoc))
-    print("click: ", data.clickLog[data.clickNum])
-    data.clickNum += 1
-    print("Clicks so far = ", data.clickNum)
-
-def redrawAll(canvas, data):
-    for dot in data.dots:
-        dot.draw(canvas)
-    if(data.drawGreenTick):
-        drawGreenTick(canvas, data)
-
-    if(data.drawRedX):
-        drawRedX(canvas, data)
-
-    if(data.isOver):
-
-        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
-
-
-def drawGreenTick(canvas, data):
-    timeResponseDisplay(data, "tick")
-    canvas.create_text(data.width/2, data.height/2, text="safe!", font=("Arial", 120), fill=data.greenTickColor)
-
-
-def drawRedX(canvas, data):
-    timeResponseDisplay(data,"X")
-    canvas.create_text(data.width/2, data.height/2, text="X", font=("Arial", 200), fill="red")
-
-
-def keyPressed(event, data):
-    pass
-
-def timerFired(data):
-    #occasionally have some dots submerge.
-    if(not data.isOver): 
-        for dot in data.dots:
-            dot.onTimerFired(data)
-            if(dot.expression == 1 and timeIntoExperiment() - dot.timeStartedSubmerge >= data.submergeTime):
-                dot.unSubmerge()
-
-
-        checkToDrown(data)
-        checkToSubmerge(data)
-
-        if(SIMULATION_END <= timeIntoExperiment()):
-            data.isOver = True
-            printFinalData(data)
-            writeToCSV(data.clickLog)
+    print("click: ", data.clickLog[data.experimentClickNum])
+    data.experimentClickNum += 1
+    print("Clicks so far = ", data.experimentClickNum)
 
 def checkToSubmerge(data):
-    roll = random.randint(1, 300) # this is called 3 times per second, so we expect a drowner every 100 seconds on avg
+    dotList = data.experimentDots if (data.mode == data.modes[3]) else data.trainingDots
+    roll = random.randint(1, 360) # this is called 3 times per second, so we expect a drowner every 120 seconds on avg
     if(roll == 5):
-        canSubmerge = list(filter(lambda x: not (x.isDrowning or x.isColliding), data.dots))
-        random.choice(canSubmerge).submerge()
+        canSubmerge = list(filter(lambda x: not (x.isDrowning or x.isColliding or x.willDrown), dotList))
+        random.choice(canSubmerge).submerge(data)
 
 def checkToDrown(data):
-    haveDrownersLeft = data.drownerNum < len(DROWNER_TIMES)
-    if(haveDrownersLeft and timeIntoExperiment() >= DROWNER_TIMES[data.drownerNum]):
+    isExperimentMode = data.mode == data.modes[3]
+    dotList = data.experimentDots if isExperimentMode else data.trainingDots
+    drownerNum = data.experimentDrownerNum if isExperimentMode else data.trainingDrownerNum
+    drownerTimes = data.experimentDrownerTimes if isExperimentMode else data.trainingDrownerTimes
+
+    haveDrownersLeft = drownerNum < len(drownerTimes)
+
+    if(haveDrownersLeft and timeIntoSimulation(data) >= drownerTimes[drownerNum]):
         #filter dots in a collision -- no colliders or already drowners
-        canDrown = list(filter(lambda x: not (x.isDrowning or x.isColliding), data.dots))
+        canDrown = list(filter(lambda x: not (x.isDrowning or x.isColliding), dotList))
         if(len(canDrown) > 0):
-            print("drowned", data.drownerNum)
+            print("drowned", drownerNum)
             random.choice(canDrown).drown(data)
-            data.drownerNum += 1 # make sure it doesnt go beyond list len
+            if(isExperimentMode):
+                data.experimentDrownerNum += 1 # make sure it doesnt go beyond list len
+            else:
+                data.trainingDrownerNum += 1
+
 
 
 def printFinalData(data):
-    print("Total Click Nums= ", data.clickNum)
+    print("Total Click Nums= ", data.experimentClickNum)
     print("All Click info : \n", data.clickLog)
     print("All Correct clicks: \n", data.correctClickDelays)
 
@@ -553,9 +759,6 @@ def writeToCSV(myClickList):
                             'swimmerX': click[9], 
                             'swimmerY': click[10]})
 
-
-
-
 ####################################
 # RUN FUNCTION
 ####################################
@@ -565,10 +768,10 @@ def run(width, height):
         canvas.delete(ALL)
         #Draw pool background
         canvas.create_rectangle(0, 0, data.width, data.height,
-                                fill='NavajoWhite2', width=0)
+                                fill= data.contrastColor, width=0)
         #Draw Pool water
         canvas.create_rectangle(POOL_BORDER_WIDTH, POOL_BORDER_HEIGHT, data.width - POOL_BORDER_WIDTH, data.height - POOL_BORDER_HEIGHT,
-                                fill='#48a3f2', width=0)
+                                fill= data.waterColor , width=0)
         redrawAll(canvas, data)
         canvas.update()
 
@@ -578,6 +781,10 @@ def run(width, height):
 
     def keyPressedWrapper(event, canvas, data):
         keyPressed(event, data)
+        redrawAllWrapper(canvas, data)
+
+    def spacePressedWrapper(event, canvas, data):
+        spacePressed(event, data)
         redrawAllWrapper(canvas, data)
 
     def timerFiredWrapper(canvas, data):
@@ -601,6 +808,8 @@ def run(width, height):
                             mousePressedWrapper(event, canvas, data))
     root.bind("<Key>", lambda event:
                             keyPressedWrapper(event, canvas, data))
+    root.bind("<space>", lambda event:
+                            spacePressedWrapper(event, canvas, data))
     timerFiredWrapper(canvas, data)
     # and launch the app
     root.mainloop()  # blocks until window is closed
