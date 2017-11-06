@@ -4,6 +4,7 @@
 
 import random
 import time
+import csv
 from tkinter import *
 
 
@@ -20,34 +21,22 @@ IS_VARIABLE_CONDITION = True
 
 
 SIMULATION_START = time.time()  # --> number of miliseconds that the simulation has been running.
-SIMULATION_END = 300 # should be 1260, 21 minutes. 3 init measure, 15 condition, 3 end measure.
+SIMULATION_END = 25 # should be 1260, 21 minutes. 3 init measure, 15 condition, 3 end measure.
 
 
 INITIAL_MEASURE_END = 180 # should be 180 - 3 Minutes
 END_MEASURE_START = 1080 # should be 1080 - 18 Minutes 
 
+PARTICIPANT_ID = 0
+DATA_OUT_TO = ("VigilanceDecrement_%d.csv" % PARTICIPANT_ID)
 
-
-
-
-NUM_DROWNERS = 5
 
 #[30, 60, 100, 250, 270] # in seconds
 
-DROWNER_TIMES = [30, 60, 100, 230, 250] # in seconds
+DROWNER_TIMES = [5, 10, 20] # in seconds
 DROWNER_TIMES.sort()
 
-
-assert(NUM_DROWNERS == len(DROWNER_TIMES))
-
-
-'''
-drowningCount = 0
-(if timer.time() >= DROWNER_TIMES[drowningCount]):
-    drowningCount += 1
-    drowner = random.choice(dots)
-    drowner.drown(isVariable)
-'''
+NUM_DROWNERS = len(DROWNER_TIMES)
 
 
 # Team blopit is FIRE & INCLUSIVE TO ALL GENDERS, RACES, SEXUALITIES, SCPECIES and ABILITIES <3
@@ -60,7 +49,7 @@ def timeIntoExperiment():
     return time.time() - SIMULATION_START
 
 ####################################
-# CLASSES
+# MOVING DOT CLASS
 ####################################
 
 
@@ -370,9 +359,12 @@ class MovingDot(object):
 
 
 
-####################################
-# MAIN FUNCTIONS
-####################################
+########################################################################
+#                           MAIN FUNCTIONS                             #
+########################################################################
+
+            #########################################
+
 def init(data):
     data.drawGreenTick = False 
     data.drownerNum = 0
@@ -383,6 +375,7 @@ def init(data):
     data.isDuringDrowning = False
     data.clickNum = 0
     data.isOver = False
+    data.submergeTime = 4
 
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
@@ -453,15 +446,21 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     clickDelay = None
     logExpression = None
     onDiver = (onSwimmer and not isCorrect and swimmer.expression == 1)
+    xLoc = None
+    yLoc = None
 
-    if (isCorrect and swimmer != None): 
-        clickDelay = time - swimmer.timeStartedDrowning 
+    if(swimmer != None):
+        xLoc = swimmer.x 
+        yLoc = swimmer.y
         logExpression = swimmer.expression
-        data.correctClickDelays.append((time, clickDelay, logExpression))
 
-    #(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)
+        if (isCorrect): 
+            clickDelay = time - swimmer.timeStartedDrowning 
+            data.correctClickDelays.append((time, clickDelay, logExpression))
+
+    #(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
     data.clickLog.append((time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
-                                                    clickDelay, logExpression))
+                                                    clickDelay, logExpression, xLoc, yLoc))
     print("click: ", data.clickLog[data.clickNum])
     data.clickNum += 1
     print("Clicks so far = ", data.clickNum)
@@ -498,7 +497,7 @@ def timerFired(data):
     if(not data.isOver): 
         for dot in data.dots:
             dot.onTimerFired(data)
-            if(dot.expression == 1 and timeIntoExperiment() - dot.timeStartedSubmerge >= 5):
+            if(dot.expression == 1 and timeIntoExperiment() - dot.timeStartedSubmerge >= data.submergeTime):
                 dot.unSubmerge()
 
 
@@ -508,6 +507,7 @@ def timerFired(data):
         if(SIMULATION_END <= timeIntoExperiment()):
             data.isOver = True
             printFinalData(data)
+            writeToCSV(data.clickLog)
 
 def checkToSubmerge(data):
     roll = random.randint(1, 300) # this is called 3 times per second, so we expect a drowner every 100 seconds on avg
@@ -530,6 +530,27 @@ def printFinalData(data):
     print("Total Click Nums= ", data.clickNum)
     print("All Click info : \n", data.clickLog)
     print("All Correct clicks: \n", data.correctClickDelays)
+
+def writeToCSV(myClickList):
+    # TODO: name the file according to the 'PARTICIPANT ID'
+    with open(DATA_OUT_TO, 'w', newline='') as csvfile:
+        fieldnames = ['time', 'timePeriod', 'isCorrect', 'onSwimmer', 'isDuringDrowning', 
+                'onDiver', 'clickDelay', 'expression', 'swimmerX', 'swimmerY']
+
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect="excel")
+
+        writer.writeheader()
+        for click in myClickList:
+            writer.writerow({'time': click[0], 
+                            'timePeriod': click[1], 
+                            'isCorrect': click[2], 
+                            'onSwimmer': click[3], 
+                            'isDuringDrowning': click[4], 
+                            'onDiver': click[5], 
+                            'clickDelay': click[6], 
+                            'expression': click[7], 
+                            'swimmerX': click[8], 
+                            'swimmerY': click[9]})
 
 
 
