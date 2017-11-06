@@ -380,7 +380,7 @@ def init(data):
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
 
-    # [(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression)...]
+    #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
     # timePeriod = 'Initial', 'Condition', 'End'
 
     data.clickLog = [] # in seconds 
@@ -458,8 +458,8 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
             clickDelay = time - swimmer.timeStartedDrowning 
             data.correctClickDelays.append((time, clickDelay, logExpression))
 
-    #(time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
-    data.clickLog.append((time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
+    #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
+    data.clickLog.append((data.clickNum, time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
                                                     clickDelay, logExpression, xLoc, yLoc))
     print("click: ", data.clickLog[data.clickNum])
     data.clickNum += 1
@@ -534,23 +534,24 @@ def printFinalData(data):
 def writeToCSV(myClickList):
     # TODO: name the file according to the 'PARTICIPANT ID'
     with open(DATA_OUT_TO, 'w', newline='') as csvfile:
-        fieldnames = ['time', 'timePeriod', 'isCorrect', 'onSwimmer', 'isDuringDrowning', 
+        fieldnames = ['clickNum','time', 'timePeriod', 'isCorrect', 'onSwimmer', 'isDuringDrowning', 
                 'onDiver', 'clickDelay', 'expression', 'swimmerX', 'swimmerY']
 
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect="excel")
 
         writer.writeheader()
         for click in myClickList:
-            writer.writerow({'time': click[0], 
-                            'timePeriod': click[1], 
-                            'isCorrect': click[2], 
-                            'onSwimmer': click[3], 
-                            'isDuringDrowning': click[4], 
-                            'onDiver': click[5], 
-                            'clickDelay': click[6], 
-                            'expression': click[7], 
-                            'swimmerX': click[8], 
-                            'swimmerY': click[9]})
+            writer.writerow({'clickNum': click[0],
+                            'time': click[1], 
+                            'timePeriod': click[2], 
+                            'isCorrect': click[3], 
+                            'onSwimmer': click[4], 
+                            'isDuringDrowning': click[5], 
+                            'onDiver': click[6], 
+                            'clickDelay': click[7], 
+                            'expression': click[8], 
+                            'swimmerX': click[9], 
+                            'swimmerY': click[10]})
 
 
 
