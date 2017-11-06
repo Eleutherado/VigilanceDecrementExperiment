@@ -571,10 +571,10 @@ def postTrainingRedrawAll(canvas, data):
 
 def experimentInit(data):
     # start timers
-    data.initialMeasureEnd = 5 # should be 120 - 2 Minutes
-    data.endMeasureStart = 30 # should be 1020 - 17 Minutes 
+    data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
+    data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
     data.experimentStart = time.time()
-    data.experimentEnd = 45 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+    data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
 
     setUpExperimentTimers(data)
 
@@ -593,12 +593,9 @@ def setUpExperimentTimers(data):
     # i.e. num of seconds into (CONDITION or INITIAL or END) 
     # NOT IN ABSOLUTE SECONDS INTO EXPERIMENT, please edit them as such, don't do absolute secs. 
 
-    #conditionDrownerTimes = [5, 10, 15, 20] #TODO SET THAT BABY
-    #initialMeasureDrownerTimes = [3, 60, 95] 
-    #endMeasureDrownerTimes = [15, 60, 140]
-    conditionDrownerTimes = [5] #TODO SET THAT BABY
-    initialMeasureDrownerTimes = [3] 
-    endMeasureDrownerTimes = [4]
+    conditionDrownerTimes = [5, 10, 15, 20] #TODO SET THAT BABY
+    initialMeasureDrownerTimes = [3, 60, 95] 
+    endMeasureDrownerTimes = [15, 60, 140]
 
     initialMeasureDrownerTimes.sort()
     conditionDrownerTimes.sort()
