@@ -15,7 +15,7 @@ POOL_BORDER_HEIGHT = HEIGHT/20
 NUM_SWIMMERS = 40
 
 MIN_SPEED = 1
-MAX_SPEED = 3
+MAX_SPEED = 2
 
 IS_VARIABLE_CONDITION = True
 
@@ -83,10 +83,12 @@ class MovingDot(object):
 
         #STATE
         self.willDrown = False
+        self.isSubmerged = False
         self.isDrowning = False
         self.isColliding = False
         self.timeStartedDrowning = None
         self.timeStartedSubmerge = None
+        self.timeToDrown = None
         
 
     def containsPoint(self, x, y):
@@ -95,8 +97,10 @@ class MovingDot(object):
 
     def drown(self, data):
         #if stable--> chose either 2 or 3
+
         self.isDrowning = True
         data.isDuringDrowning = True
+        data.timeToDrown = None
 
         if (IS_VARIABLE_CONDITION):
             self.expression = random.randint(2,7)
@@ -110,7 +114,10 @@ class MovingDot(object):
 
     def startDrown(self, data):
         # expression turns to 1
+        # after 5 seconds, call drown
         self.willDrown = True
+        self.expression = 1
+        self.timeToDrown = timeIntoSimulation(data)
 
     def unDrown(self, data):
         self.isDrowning = False
@@ -121,10 +128,12 @@ class MovingDot(object):
 
     def submerge(self, data):
         self.expression = 1
+        self.isSubmerged = True
         self.timeStartedSubmerge = timeIntoSimulation(data)
 
     def unSubmerge(self):
         self.expression = 0
+        self.isSubmerged = False
         self.timeStartedSubmerge = None
 
 
@@ -204,8 +213,6 @@ class MovingDot(object):
                             rightX, bottomY,
                             fill="")
 
-
-
     def drawEyes(self, canvas, leftX, rightX, topY, bottomY, isInverted):
         # if inverted then draw eyes near bottom, else, near top
 
@@ -272,6 +279,10 @@ class MovingDot(object):
         self.checkWallCollisions()
         self.checkSwimmerCollisions(data)
 
+        if(self.willDrown and timeIntoSimulation(data) - self.timeToDrown >= data.submergeTime):
+            self.drown(data)
+            self.willDrown = False
+
         if (not self.isDrowning):
             self.move()
 
@@ -327,7 +338,7 @@ class MovingDot(object):
             self.updateDir(newDir)
 
 
-    def checkSwimmerCollisions(self, data): # TODO: MAKE SURE SWIMMER NOT COLLIDING WITH WALL TOO
+    def checkSwimmerCollisions(self, data): 
         dotList = data.experimentDots if (data.mode == data.modes[3]) else data.trainingDots
         for other in dotList:
             if (other is self): # always colliding with self
@@ -464,9 +475,6 @@ def splashScreenRedrawAll(canvas, data):
 ######################################
 
 
-# TODO same as experiment handlers, but not logging the data to the experiment file
-# use training timer here. 
-
 def trainingInit(data):
     # populate pool
     # start timers
@@ -479,7 +487,7 @@ def trainingInit(data):
     #[30, 60, 100, 250, 270] # in seconds
     # [5, 10, 15, 20] # for testing
 
-    data.trainingDrownerTimes = [5, 15, 20, 35] #for testing
+    data.trainingDrownerTimes = [5, 15, 35] #for testing
     data.trainingDrownerTimes.sort()
 
     data.trainingDrownerNum = 0
@@ -526,7 +534,7 @@ def trainingTimerFired(data):
     if(not data.trainingOver): 
         for dot in data.trainingDots:
             dot.onTimerFired(data)
-            if(dot.expression == 1 and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
+            if(dot.isSubmerged and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
                 dot.unSubmerge()
 
 
@@ -548,9 +556,6 @@ def trainingTimerFired(data):
 ######################################
 
 
-# TODO same as experiment handlers, but not logging the data to the experiment file
-# use training timer here. 
-
 def postTrainingSpacePressed(event, data):
     switchMode(data.modes[3], data)
 
@@ -563,14 +568,13 @@ def postTrainingRedrawAll(canvas, data):
 ######################################
 # EXPERIMENT HANDLERS
 ######################################
-# TODO start the experiment timer here
 
 def experimentInit(data):
     # start timers
-    data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
-    data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
+    data.initialMeasureEnd = 5 # should be 120 - 2 Minutes
+    data.endMeasureStart = 30 # should be 1020 - 17 Minutes 
     data.experimentStart = time.time()
-    data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+    data.experimentEnd = 45 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
 
     setUpExperimentTimers(data)
 
@@ -585,10 +589,16 @@ def experimentInit(data):
 
 
 def setUpExperimentTimers(data):
+    # THESE TIMES ARE RELATIVE TO THE BEGINNING OF EACH PERIOD 
+    # i.e. num of seconds into (CONDITION or INITIAL or END) 
+    # NOT IN ABSOLUTE SECONDS INTO EXPERIMENT, please edit them as such, don't do absolute secs. 
 
-    conditionDrownerTimes = [5, 10, 15, 20] #TODO SET THAT BABY
-    initialMeasureDrownerTimes = [35, 60, 100]
-    endMeasureDrownerTimes = [15, 60, 140]
+    #conditionDrownerTimes = [5, 10, 15, 20] #TODO SET THAT BABY
+    #initialMeasureDrownerTimes = [3, 60, 95] 
+    #endMeasureDrownerTimes = [15, 60, 140]
+    conditionDrownerTimes = [5] #TODO SET THAT BABY
+    initialMeasureDrownerTimes = [3] 
+    endMeasureDrownerTimes = [4]
 
     initialMeasureDrownerTimes.sort()
     conditionDrownerTimes.sort()
@@ -637,7 +647,7 @@ def experimentTimerFired(data):
     if(not data.isOver): 
         for dot in data.experimentDots:
             dot.onTimerFired(data)
-            if(dot.expression == 1 and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
+            if(dot.isSubmerged and timeIntoSimulation(data) - dot.timeStartedSubmerge >= data.submergeTime):
                 dot.unSubmerge()
 
         checkToDrown(data)
@@ -724,7 +734,7 @@ def checkToDrown(data):
         canDrown = list(filter(lambda x: not (x.isDrowning or x.isColliding), dotList))
         if(len(canDrown) > 0):
             print("drowned", drownerNum)
-            random.choice(canDrown).drown(data)
+            random.choice(canDrown).startDrown(data)
             if(isExperimentMode):
                 data.experimentDrownerNum += 1 # make sure it doesnt go beyond list len
             else:
