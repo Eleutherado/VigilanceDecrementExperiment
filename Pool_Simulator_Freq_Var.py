@@ -571,10 +571,10 @@ def postTrainingRedrawAll(canvas, data):
 
 def experimentInit(data):
     # start timers
-    data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
-    data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
+    data.initialMeasureEnd = 15 # should be 120 - 2 Minutes
+    data.endMeasureStart = 95 # should be 1020 - 17 Minutes 
     data.experimentStart = time.time()
-    data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+    data.experimentEnd = 120 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
 
     setUpExperimentTimers(data)
 
@@ -594,9 +594,9 @@ def setUpExperimentTimers(data):
     # NOT IN ABSOLUTE SECONDS INTO EXPERIMENT, please edit them as such, don't do absolute secs. 
 
     #SET THAT TIME
-    conditionDrownerTimes = [6, 30, 68, 100, 135, 230, 258, 277, 294, 307, 330, 390, 429, 518, 521, 607, 665, 789, 842, 852, 866, 869] # Frequent List 22 drownings (on average every 40s)
-    initialMeasureDrownerTimes = [3, 60, 95] 
-    endMeasureDrownerTimes = [15, 60, 140]
+    conditionDrownerTimes = [6, 30, 68] 
+    initialMeasureDrownerTimes = [3] 
+    endMeasureDrownerTimes = [5]
 
     initialMeasureDrownerTimes.sort()
     conditionDrownerTimes.sort()
