@@ -10,19 +10,21 @@ from tkinter import *
 
 WIDTH = 1200
 HEIGHT = 700
+#WIDTH = 1900
+#HEIGHT = 990
+
 POOL_BORDER_WIDTH = WIDTH/20
 POOL_BORDER_HEIGHT = HEIGHT/20
-NUM_SWIMMERS = 40
+NUM_SWIMMERS = 50
 
-MIN_SPEED = 1
+MIN_SPEED = 0
 MAX_SPEED = 2
 
 IS_VARIABLE_CONDITION = True
 
 
-PARTICIPANT_ID = 0
-DATA_OUT_TO = ("VigilanceDecrementExperiment_%d.csv" % PARTICIPANT_ID)
-TRAINING_DATA_OUT_TO = ("VigilanceDecrementTraining_%d.csv" % PARTICIPANT_ID)
+PARTICIPANT_ID = random.randint(0, 99999)
+DATA_OUT_TO = ("VigilanceDecrement_Freq_Var_%d.csv" % PARTICIPANT_ID)
 
 
 
@@ -374,7 +376,7 @@ def init(data):
     data.modes = ['splashScreen', 'training', 'postTraining', 'experiment']
     data.timePeriods = ['Training', 'Initial', 'Condition', 'End']
     data.mode = data.modes[0]
-    data.contrastColor = "NavajoWhite2"
+    data.contrastColor = "#edc78e"
     data.waterColor = '#48a3f2'
     
 
@@ -386,7 +388,7 @@ def init(data):
     data.greenTickColor = '#067c2d'
     data.drawRedX = False
     data.isDuringDrowning = False
-    data.submergeTime = 5
+    data.submergeTime = 3
 
     # [(time, clickDelay, swimmer.expression)...]
     data.correctClickDelays = [] #in seconds - difference between drown start and save
@@ -401,8 +403,8 @@ def initPopulate(data, dotList):
     offset = 25
     numPatrons = NUM_SWIMMERS
     while (i < numPatrons):
-        xCord = random.randint(50+offset,data.width-50-offset)
-        yCord = random.randint(50+offset,data.height-50-offset)
+        xCord = random.randint(POOL_BORDER_WIDTH +offset, data.width - POOL_BORDER_WIDTH - offset)
+        yCord = random.randint(POOL_BORDER_HEIGHT + offset, data.height - 50 - offset)
         dotList.append(MovingDot(xCord, yCord))
         i = i + 1
 
@@ -459,7 +461,7 @@ def splashScreenRedrawAll(canvas, data):
     #canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
     offset = data.height/10
     if (not data.splashSpaceBarPressed):
-        canvas.create_text(data.width/2, data.height/4, text="Welcome to Team Blopit's Experiment!", font=("Arial", 56), fill=data.contrastColor)
+        canvas.create_text(data.width/2, data.height/4, text="Welcome to Team Blopit's Experiment!", font=("Arial", 48), fill=data.contrastColor)
         canvas.create_text(data.width/2, data.height/4 + offset, text="We are grateful for your time", font=("Arial", 36), fill=data.contrastColor)
         canvas.create_text(data.width/2, data.height/4 + 4*offset, text="Please Read the Instructions sheet", font=("Arial", 48), fill=data.contrastColor)
         canvas.create_text(data.width/2, data.height/4 + 5*offset, text="Ask us if you have any questions", font=("Arial", 36), fill=data.contrastColor)
@@ -562,6 +564,7 @@ def postTrainingSpacePressed(event, data):
 def postTrainingRedrawAll(canvas, data):
     offset = data.height/10
     canvas.create_text(data.width/2, data.height/2, text="Your training session is done!", font=("Arial", 48), fill=data.contrastColor)
+    canvas.create_text(data.width/2, data.height/4 + 4*offset, text="Raise your hand if you have any questions", font=("Arial", 36), fill=data.contrastColor)
     canvas.create_text(data.width/2, data.height/4 + 5.5*offset, text="Press the SpaceBar to Begin Experiment", font=("Arial", 36), fill=data.contrastColor)
 
 
@@ -571,15 +574,20 @@ def postTrainingRedrawAll(canvas, data):
 
 def experimentInit(data):
     # start timers
-    data.initialMeasureEnd = 15 # should be 120 - 2 Minutes
-    data.endMeasureStart = 95 # should be 1020 - 17 Minutes 
+    #data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
+    #data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
+    #data.experimentStart = time.time()
+    #data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+
+    data.initialMeasureEnd = 10 # should be 120 - 2 Minutes
+    data.endMeasureStart = 20 # should be 1020 - 17 Minutes 
     data.experimentStart = time.time()
-    data.experimentEnd = 120 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+    data.experimentEnd = 30 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
 
     setUpExperimentTimers(data)
 
     data.experimentStarted = True
-    data.isOver = False
+    data.isOver = True
 
     data.experimentDrownerNum = 0
     data.experimentClickNum = 0
@@ -594,9 +602,10 @@ def setUpExperimentTimers(data):
     # NOT IN ABSOLUTE SECONDS INTO EXPERIMENT, please edit them as such, don't do absolute secs. 
 
     #SET THAT TIME
-    conditionDrownerTimes = [6, 30, 68] 
-    initialMeasureDrownerTimes = [3] 
-    endMeasureDrownerTimes = [5]
+    # Change condition to 40 times
+    conditionDrownerTimes = [20, 57, 91, 145, 200, 234, 254, 258, 280, 310, 312, 345, 368, 376, 406, 417, 453, 473, 506, 511, 535, 546, 565, 582, 612, 631, 643, 659, 690, 702, 717, 740, 759, 774, 790, 810, 821, 834, 848, 877] 
+    initialMeasureDrownerTimes = [3, 60, 95] 
+    endMeasureDrownerTimes = [15, 60, 140]
 
     initialMeasureDrownerTimes.sort()
     conditionDrownerTimes.sort()
@@ -626,6 +635,7 @@ def experimentMousePressed(event, data):
         if(not swimmerClicked):
             logClick(data, timeIntoSimulation(data), False, swimmerClicked, None) # offswimmer
             data.drawRedX = True
+
             data.startResponseDraw = time.time()
 
 def experimentRedrawAll(canvas, data):
@@ -638,8 +648,8 @@ def experimentRedrawAll(canvas, data):
         drawRedX(canvas, data)
 
     if(data.isOver):
-        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
-
+        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 180), fill="red")
+        canvas.create_text(data.width/2, 3 * data.height/4, text="Thank you!", font=("Arial", 120), fill=data.greenTickColor)
 def experimentTimerFired(data):
     #occasionally have some dots submerge.
     if(not data.isOver): 
@@ -695,26 +705,28 @@ def logClick(data, time, isCorrect, onSwimmer, swimmer=None):
     onDiver = (onSwimmer and not isCorrect and swimmer.expression == 1)
     xLoc = None
     yLoc = None
+    swimmerStill = None
 
     if(swimmer != None):
         xLoc = swimmer.x 
         yLoc = swimmer.y
         logExpression = swimmer.expression
+        swimmerStill = (swimmer.speed == 0)
 
         if (isCorrect): 
             clickDelay = time - swimmer.timeStartedDrowning 
             data.correctClickDelays.append((time, clickDelay, logExpression))
 
-    #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmer.x, swimmer.y)
+    #(clickNum, time, timePeriod, isCorrect, onSwimmer, isDuringDrowning, onDiver, clickDelay, swimmer.expression, swimmerStill, swimmer.x, swimmer.y)
     data.clickLog.append((data.experimentClickNum, time, timePeriod, isCorrect, onSwimmer, data.isDuringDrowning, onDiver, 
-                                                    clickDelay, logExpression, xLoc, yLoc))
+                                                    clickDelay, logExpression, swimmerStill, xLoc, yLoc))
     print("click: ", data.clickLog[data.experimentClickNum])
     data.experimentClickNum += 1
     print("Clicks so far = ", data.experimentClickNum)
 
 def checkToSubmerge(data):
     dotList = data.experimentDots if (data.mode == data.modes[3]) else data.trainingDots
-    roll = random.randint(1, 360) # this is called 3 times per second, so we expect a drowner every 120 seconds on avg
+    roll = random.randint(1, 40) # this is called 3 times per second, so we expect a drowner every 120 seconds on avg
     if(roll == 5):
         canSubmerge = list(filter(lambda x: not (x.isDrowning or x.isColliding or x.willDrown), dotList))
         random.choice(canSubmerge).submerge(data)
@@ -749,7 +761,7 @@ def writeToCSV(myClickList):
     # TODO: name the file according to the 'PARTICIPANT ID'
     with open(DATA_OUT_TO, 'w', newline='') as csvfile:
         fieldnames = ['clickNum','time', 'timePeriod', 'isCorrect', 'onSwimmer', 'isDuringDrowning', 
-                'onDiver', 'clickDelay', 'expression', 'swimmerX', 'swimmerY']
+                'onDiver', 'clickDelay', 'expression', 'swimmerStill', 'swimmerX', 'swimmerY']
 
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect="excel")
 
@@ -763,9 +775,10 @@ def writeToCSV(myClickList):
                             'isDuringDrowning': click[5], 
                             'onDiver': click[6], 
                             'clickDelay': click[7], 
-                            'expression': click[8], 
-                            'swimmerX': click[9], 
-                            'swimmerY': click[10]})
+                            'expression': click[8],
+                            'swimmerStill': click[9], 
+                            'swimmerX': click[10], 
+                            'swimmerY': click[11]})
 
 ####################################
 # RUN FUNCTION

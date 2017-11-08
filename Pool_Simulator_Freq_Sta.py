@@ -24,7 +24,7 @@ IS_VARIABLE_CONDITION = False
 
 
 PARTICIPANT_ID = random.randint(0, 99999)
-DATA_OUT_TO = ("VigilanceDecrementExperiment_%d.csv" % PARTICIPANT_ID)
+DATA_OUT_TO = ("VigilanceDecrement_Freq_Sta_%d.csv" % PARTICIPANT_ID)
 
 
 
@@ -564,6 +564,7 @@ def postTrainingSpacePressed(event, data):
 def postTrainingRedrawAll(canvas, data):
     offset = data.height/10
     canvas.create_text(data.width/2, data.height/2, text="Your training session is done!", font=("Arial", 48), fill=data.contrastColor)
+    canvas.create_text(data.width/2, data.height/4 + 4*offset, text="Raise your hand if you have any questions", font=("Arial", 36), fill=data.contrastColor)
     canvas.create_text(data.width/2, data.height/4 + 5.5*offset, text="Press the SpaceBar to Begin Experiment", font=("Arial", 36), fill=data.contrastColor)
 
 
@@ -586,7 +587,7 @@ def experimentInit(data):
     setUpExperimentTimers(data)
 
     data.experimentStarted = True
-    data.isOver = False
+    data.isOver = True
 
     data.experimentDrownerNum = 0
     data.experimentClickNum = 0
@@ -602,13 +603,9 @@ def setUpExperimentTimers(data):
 
     #SET THAT TIME
     # Change condition to 40 times
-    #conditionDrownerTimes = [6, 30, 68, 100, 135, 230, 258, 277, 294, 307, 330, 390, 429, 518, 521, 607, 665, 789, 842, 852, 866, 869] # Frequent List 22 drownings (on average every 40s)
-    #initialMeasureDrownerTimes = [3, 60, 95] 
-    #endMeasureDrownerTimes = [15, 60, 140]
-
-    conditionDrownerTimes = [3]
-    initialMeasureDrownerTimes = [3] 
-    endMeasureDrownerTimes = [3]
+    conditionDrownerTimes = [20, 57, 91, 145, 200, 234, 254, 258, 280, 310, 312, 345, 368, 376, 406, 417, 453, 473, 506, 511, 535, 546, 565, 582, 612, 631, 643, 659, 690, 702, 717, 740, 759, 774, 790, 810, 821, 834, 848, 877] 
+    initialMeasureDrownerTimes = [3, 60, 95] 
+    endMeasureDrownerTimes = [15, 60, 140]
 
     initialMeasureDrownerTimes.sort()
     conditionDrownerTimes.sort()
@@ -638,6 +635,7 @@ def experimentMousePressed(event, data):
         if(not swimmerClicked):
             logClick(data, timeIntoSimulation(data), False, swimmerClicked, None) # offswimmer
             data.drawRedX = True
+
             data.startResponseDraw = time.time()
 
 def experimentRedrawAll(canvas, data):
@@ -650,8 +648,8 @@ def experimentRedrawAll(canvas, data):
         drawRedX(canvas, data)
 
     if(data.isOver):
-        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
-
+        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 180), fill="red")
+        canvas.create_text(data.width/2, 3 * data.height/4, text="Thank you!", font=("Arial", 120), fill=data.greenTickColor)
 def experimentTimerFired(data):
     #occasionally have some dots submerge.
     if(not data.isOver): 
