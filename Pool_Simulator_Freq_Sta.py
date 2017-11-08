@@ -8,19 +8,19 @@ import csv
 from tkinter import *
 
 
-#WIDTH = 1200
-#HEIGHT = 700
-WIDTH = 1900
-HEIGHT = 1000
+WIDTH = 1200
+HEIGHT = 700
+#WIDTH = 1900
+#HEIGHT = 1000
 
-POOL_BORDER_WIDTH = WIDTH/20
-POOL_BORDER_HEIGHT = HEIGHT/20
+POOL_BORDER_WIDTH = int(WIDTH/20)
+POOL_BORDER_HEIGHT = int(HEIGHT/20)
 NUM_SWIMMERS = 50
 
 MIN_SPEED = 0
 MAX_SPEED = 2
 
-IS_VARIABLE_CONDITION = False
+IS_VARIABLE_CONDITION = True
 
 
 PARTICIPANT_ID = random.randint(0, 99999)
@@ -484,7 +484,7 @@ def trainingInit(data):
     data.trainingStarted = True
     data.trainingOver = False
     data.trainingStart = time.time()
-    data.trainingEnd = 45 # 45
+    data.trainingEnd = 5 # 45
 
     #[30, 60, 100, 250, 270] # in seconds
     # [5, 10, 15, 20] # for testing
@@ -574,20 +574,20 @@ def postTrainingRedrawAll(canvas, data):
 
 def experimentInit(data):
     # start timers
-    #data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
-    #data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
-    #data.experimentStart = time.time()
-    #data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
-
-    data.initialMeasureEnd = 10 # should be 120 - 2 Minutes
-    data.endMeasureStart = 20 # should be 1020 - 17 Minutes 
+    data.initialMeasureEnd = 120 # should be 120 - 2 Minutes
+    data.endMeasureStart = 1020 # should be 1020 - 17 Minutes 
     data.experimentStart = time.time()
-    data.experimentEnd = 30 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+    data.experimentEnd = 1200 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
+
+    #data.initialMeasureEnd = 10 # should be 120 - 2 Minutes
+    #data.endMeasureStart = 20 # should be 1020 - 17 Minutes 
+    #data.experimentStart = time.time()
+    #data.experimentEnd = 30 # should be 1200, 20 minutes. 2 init measure, 15 condition, 3 end measure.
 
     setUpExperimentTimers(data)
 
     data.experimentStarted = True
-    data.isOver = True
+    data.isOver = False
 
     data.experimentDrownerNum = 0
     data.experimentClickNum = 0
@@ -603,7 +603,7 @@ def setUpExperimentTimers(data):
 
     #SET THAT TIME
     # Change condition to 40 times
-    conditionDrownerTimes = [20, 57, 91, 145, 200, 234, 254, 258, 280, 310, 312, 345, 368, 376, 406, 417, 453, 473, 506, 511, 535, 546, 565, 582, 612, 631, 643, 659, 690, 702, 717, 740, 759, 774, 790, 810, 821, 834, 848, 877] 
+    conditionDrownerTimes = [51, 199, 323, 527, 795]
     initialMeasureDrownerTimes = [3, 60, 95] 
     endMeasureDrownerTimes = [15, 60, 140]
 
