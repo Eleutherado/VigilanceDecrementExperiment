@@ -484,7 +484,7 @@ def trainingInit(data):
     data.trainingStarted = True
     data.trainingOver = False
     data.trainingStart = time.time()
-    data.trainingEnd = 5 # 45
+    data.trainingEnd = 45 # 45
 
     #[30, 60, 100, 250, 270] # in seconds
     # [5, 10, 15, 20] # for testing
