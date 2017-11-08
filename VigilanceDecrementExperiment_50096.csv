@@ -1,3 +1,0 @@
-clickNum,time,timePeriod,isCorrect,onSwimmer,isDuringDrowning,onDiver,clickDelay,expression,swimmerStill,swimmerX,swimmerY
-0,14.304947137832642,Condition,True,True,True,False,8.209115266799927,3,False,874,315
-1,16.954996824264526,Condition,True,True,True,False,0.8829457759857178,2,False,514,544

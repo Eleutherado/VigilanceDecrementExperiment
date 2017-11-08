@@ -21,6 +21,7 @@ MIN_SPEED = 0
 MAX_SPEED = 2
 
 IS_VARIABLE_CONDITION = True
+IS_FREQUENT_CONDITION = True
 
 
 PARTICIPANT_ID = random.randint(0, 99999)
@@ -127,6 +128,7 @@ class MovingDot(object):
 
         self.expression = 0
         self.timeStartedDrowning = None
+        self.speed = getNewSpeed()
 
     def submerge(self, data):
         self.expression = 1
@@ -297,6 +299,7 @@ class MovingDot(object):
 
     def updateDir(self, newDir):
         self.dir = newDir
+        self.speed = getNewSpeed()
         self.moveX = MovingDot.dirNums[self.dir][0] * self.speed
         self.moveY = MovingDot.dirNums[self.dir][1] * self.speed
 
@@ -603,7 +606,9 @@ def setUpExperimentTimers(data):
 
     #SET THAT TIME
     # Change condition to 40 times
-    conditionDrownerTimes = [58, 66, 88, 112, 113, 129, 133, 137, 150, 155, 167, 255, 273, 274, 289, 290, 328, 344, 371, 410, 424, 427, 443, 452, 471, 539, 580, 597, 622, 676, 679, 683, 688, 703, 714, 788, 809, 831, 832, 869, 869]
+    inFreqList = [51, 199, 323, 527, 795]
+    freqList = [58, 66, 88, 112, 115, 129, 133, 137, 150, 155, 167, 255, 273, 274, 289, 290, 328, 344, 371, 410, 424, 427, 443, 452, 471, 539, 580, 597, 622, 676, 679, 683, 688, 703, 714, 788, 809, 831, 832, 869, 869]
+    conditionDrownerTimes = freqList if IS_FREQUENT_CONDITION else inFreqList
     initialMeasureDrownerTimes = [3, 60, 95] 
     endMeasureDrownerTimes = [15, 60, 140]
 
@@ -650,6 +655,7 @@ def experimentRedrawAll(canvas, data):
     if(data.isOver):
         canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 180), fill="red")
         canvas.create_text(data.width/2, 3 * data.height/4, text="Thank you!", font=("Arial", 120), fill=data.greenTickColor)
+
 def experimentTimerFired(data):
     #occasionally have some dots submerge.
     if(not data.isOver): 
