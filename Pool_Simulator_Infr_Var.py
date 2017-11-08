@@ -13,8 +13,8 @@ from tkinter import *
 WIDTH = 1900
 HEIGHT = 990
 
-POOL_BORDER_WIDTH = WIDTH/20
-POOL_BORDER_HEIGHT = HEIGHT/20
+POOL_BORDER_WIDTH = int(WIDTH/20)
+POOL_BORDER_HEIGHT = int(HEIGHT/20)
 NUM_SWIMMERS = 50
 
 MIN_SPEED = 0
@@ -404,7 +404,7 @@ def initPopulate(data, dotList):
     numPatrons = NUM_SWIMMERS
     while (i < numPatrons):
         xCord = random.randint(POOL_BORDER_WIDTH +offset, data.width - POOL_BORDER_WIDTH - offset)
-        yCord = random.randint(POOL_BORDER_HEIGHT + offset, data.height - 50 - offset)
+        yCord = random.randint(POOL_BORDER_HEIGHT + offset, data.height - POOL_BORDER_HEIGHT - offset)
         dotList.append(MovingDot(xCord, yCord))
         i = i + 1
 
