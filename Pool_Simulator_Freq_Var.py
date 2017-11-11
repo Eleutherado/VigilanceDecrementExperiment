@@ -609,6 +609,7 @@ def setUpExperimentTimers(data):
     inFreqList = [51, 199, 323, 527, 795]
     freqList = [58, 66, 88, 112, 115, 129, 133, 137, 150, 155, 167, 255, 273, 274, 289, 290, 328, 344, 371, 410, 424, 427, 443, 452, 471, 539, 580, 597, 622, 676, 679, 683, 688, 703, 714, 788, 809, 831, 832, 869, 869]
     conditionDrownerTimes = freqList if IS_FREQUENT_CONDITION else inFreqList
+    print(conditionDrownerTimes)
     initialMeasureDrownerTimes = [3, 60, 95] 
     endMeasureDrownerTimes = [15, 60, 140]
 
