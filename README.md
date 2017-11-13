@@ -9,8 +9,8 @@ Each file is for one separate condition of the 2 x 2 experiment. Run the desired
 The Independent variables are: (Frequent or Infrequent) and (stable or Variable)
 
 The instructions for the participants to see are here: 
-    + [Variable](https://docs.google.com/document/d/1W4ZTmdlg0dC8MWpmr9Q8HDa3zBrenej8vK6-8E4bhvg/edit?usp=sharing)
-    + [Stable] (https://docs.google.com/document/d/17DiAOVSAUVhJaKQt-XEq12lQ5Q7yVUWLNWCUbkQkZ1M/edit?usp=sharing)
++ [Variable](https://docs.google.com/document/d/1W4ZTmdlg0dC8MWpmr9Q8HDa3zBrenej8vK6-8E4bhvg/edit?usp=sharing)
++ [Stable](https://docs.google.com/document/d/17DiAOVSAUVhJaKQt-XEq12lQ5Q7yVUWLNWCUbkQkZ1M/edit?usp=sharing)
 
 ### Simulation Procedure
 The simulation starts with a welcoming page prompting the participants to read the instructions sheet (links above). The participants may then proceed to the training session which lasts 45 seconds, and then to a buffer screen before they start the real experiment. Here they may ask questions to the experimenter should any arise. After that they proceed to the real experiment.
