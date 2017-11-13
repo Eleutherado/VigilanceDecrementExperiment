@@ -1,4 +1,4 @@
-# pool simulator
+# Requires Python 3
 # Special thanks to Mark Stehlik and David Kosbie <3 
 # for teaching Blopit how to steal their code and enhance it w engineering chops
 
