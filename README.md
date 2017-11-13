@@ -5,6 +5,7 @@ Made using Tkinter
 
 ## How to Run 
 > Requires Python 3 for csv output
+
 Each file is for one separate condition of the 2 x 2 experiment. Run the desired file according to the desired condition, as expressed in the name.
 The Independent variables are: (Frequent or Infrequent) and (stable or Variable)
 
