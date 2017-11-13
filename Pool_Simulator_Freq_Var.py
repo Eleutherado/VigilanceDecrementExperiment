@@ -654,7 +654,7 @@ def experimentRedrawAll(canvas, data):
         drawRedX(canvas, data)
 
     if(data.isOver):
-        canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 180), fill="red")
+        canvas.create_text(data.width/2, data.height/2, text="It's Over", font=("Arial", 180), fill="red")
         canvas.create_text(data.width/2, 3 * data.height/4, text="Thank you!", font=("Arial", 120), fill=data.greenTickColor)
 
 def experimentTimerFired(data):

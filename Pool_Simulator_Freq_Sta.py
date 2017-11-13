@@ -461,7 +461,7 @@ def splashScreenSpacePressed(event, data):
         data.splashSpaceBarPressed = True
 
 def splashScreenRedrawAll(canvas, data):
-    #canvas.create_text(data.width/2, data.height/2, text="Its Over", font=("Arial", 200), fill="red")
+    #canvas.create_text(data.width/2, data.height/2, text="It's Over", font=("Arial", 200), fill="red")
     offset = data.height/10
     if (not data.splashSpaceBarPressed):
         canvas.create_text(data.width/2, data.height/4, text="Welcome to Team Blopit's Experiment!", font=("Arial", 48), fill=data.contrastColor)
