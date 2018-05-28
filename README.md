@@ -3,6 +3,10 @@
 A low fi lifeguard simulation program meant to study the factors that impact vigilance decrement in lifeguard.
 Made using Tkinter
 
+Vigilance Decrement is the phenomena of decline in performance efficiency over time.
+There are two explanations for Vigilance Decrement (VD) – Understimulation (Boredom) and Resource Depletion. 
+Using this program we showed support for Understimulation using a sample of 22 Carnegie Mellon University undergraduate students.
+
 ## How to Run 
 > Requires Python 3 for csv output
 
@@ -26,3 +30,23 @@ The first 120 seconds are the 'Initial' period, where we have 3 drownings whose 
 + Emilio Vargas
 
 > ###### Students At CMU
+
+## Results
+![alt text](https://image.ibb.co/eHkqAy/Poster.jpg "Poster")
+
+
+
+### Stimuli and Interface
+Pool with Swimmers:
+![alt text](https://preview.ibb.co/imA43J/Pool_defalult.png "Pool_defalult")
+
+Correct Click Feedback:
+![alt text](https://preview.ibb.co/d25hqy/correct_click.png "correct_click")
+
+Incorrect Click Feedback:
+![alt text](https://preview.ibb.co/iO4xOJ/incorrect_click.png "Incorrect_click")
+
+
+
+
+
