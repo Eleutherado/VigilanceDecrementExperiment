@@ -38,13 +38,16 @@ The first 120 seconds are the 'Initial' period, where we have 3 drownings whose 
 
 
 ### Stimuli and Interface
-Pool with Swimmers:
+##### Pool with Swimmers:
+
 ![alt text](https://preview.ibb.co/imA43J/Pool_defalult.png "Pool_defalult")
 
-Correct Click Feedback:
+##### Correct Click Feedback:
+
 ![alt text](https://preview.ibb.co/d25hqy/correct_click.png "correct_click")
 
-Incorrect Click Feedback:
+##### Incorrect Click Feedback:
+
 ![alt text](https://preview.ibb.co/iO4xOJ/incorrect_click.png "Incorrect_click")
 
 
