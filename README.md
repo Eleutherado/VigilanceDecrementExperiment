@@ -4,7 +4,8 @@ A low fi lifeguard simulation program meant to study the factors that impact vig
 Made using Tkinter
 
 Vigilance Decrement is the phenomena of decline in performance efficiency over time.
-There are two explanations for Vigilance Decrement (VD) – Understimulation (Boredom) and Resource Depletion. 
+There are two explanations for Vigilance Decrement – Understimulation (Boredom) and Resource Depletion. 
+
 Using this program we showed support for Understimulation using a sample of 22 Carnegie Mellon University undergraduate students.
 
 ## How to Run 
